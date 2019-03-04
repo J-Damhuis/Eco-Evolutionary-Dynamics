@@ -1,0 +1,15 @@
+2 number runs
+1000 number generations
+0.00003 attack rate V
+0.00003 attack rate G
+1.3 lambda
+0.5 k
+0.00002 d
+5000 initial hosts
+2000 initial V
+2000 initial G
+5 fecundity V
+5 fecundity G
+5 max eggs
+0.9 correlation coefficient
+1 wg
