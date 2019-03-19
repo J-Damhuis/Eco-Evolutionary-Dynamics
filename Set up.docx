@@ -1,0 +1,58 @@
+﻿Three things are needed in order for speciation to occur:
+- Disruptive selection on a trait (in this case due to frequency dependence)
+- Assortative mating
+- A link between partner choice and selected trait (at first this is implied since magic trait)
+
+Look at speciation dynamics if individuals can choose which resource to utilise based on perceived fitness.
+Eco-evolutionary dynamics = interplay between ecological and evolutionary processes
+Implement ecology and evolution on same time scale
+Test robustness of classical ecological speciation models
+
+
+
+Model set-up:
+
+1 population of N individuals
+2 resources of R1 and R2 size
+Individuals have heritable ability X between -1 and 1 to utilise the resources
+Initial X favours resource 1 (close to -1, say -0.8)
+In random order, individuals choose which resource to utilise based on size of resource, number of other individuals currently present at the resources and their X (Ri/(Ni+1)*e^-(X±1)^2)
+When all individuals have chosen, resources are distributed across individuals present
+Individuals utilise the resources and get a fitness (Ri/Ni*e^-(X±1)^2)
+Resources are refilled at the end of the generation
+
+F females and M males in population
+Females have a range CI they prefer their partners to be within
+Initial CI is large (random mating)
+Females are chosen semi-randomly based on fitness (weighted lottery)
+Males are chosen semi-randomly based on fitness out of a pool of all males with X within X±CI
+They create a female and a male with X the median of their Xs
+Chance of mutation of X and CI of offspring
+Parents are replaced by offspring at the end of the generation
+
+
+
+Resource dynamics:
+
+Van Velzen & Etienne 2014: Fixed total amount of resources. If used, can only become available again through consumer death or waste.
+
+MacArthur 1972 + Abrams et al. 2008 + Abrams & Rueffler 2009: Adaptive dynamics. Change in resource density is equal to the resource growth rate minus the summed products of consumer density, resource density and the utilisation function of the different consumer species.
+Potential resource dynamics for the model:
+
+In random order, all individuals assess the two resources and choose one based on the quantity of the resources, the number of other individuals already present at the resources and their innate ability to utilise the resources. After all individuals have chosen, each resource is divided evenly among all individuals present at that resource. Then, each individual utilises the resource it chose and gains a fitness based on the quantity of the resource it utilised and its innate ability to utilise it. At the start of the next generation both resources are replenished.
+
+
+In random order, all individuals assess the two resources and choose one based on the quantity of the resources and their innate ability to utilise the resources. When an individual has chosen, it takes a fixed amount of the resource and utilises it. The individual gains a fitness based on the quantity of the resource it utilised and its innate ability to utilise it. The part of the resource the individual was unable to utilise goes back into the total quantity of that resource. At the start of the next generation both resources are replenished.
+
+
+In random order, all individuals assess the two resources and choose one based on the quantity of the resources and their innate ability to utilise the resources. When an individual has chosen, it takes a fixed proportion of the resource and utilises it. The individual gains a fitness based on the quantity of the resource it utilised and its innate ability to utilise it. The part of the resource the individual was unable to utilise goes back into the total quantity of that resource. At the start of the next generation both resources are replenished.
+
+
+In random order, all individuals assess the two resources and choose one based on the quantity of the resources and their innate ability to utilise the resources. When an individual has chosen, it starts taking a fixed amount of the resource every so often and utilises it. The part of the resource the individual is unable to utilise goes back into the total quantity of that resource. While this individual is at the resource, the next one chooses and also starts feeding. This goes on until both resources are almost depleted. Then, each individual gains a fitness based on the quantity of the resource it utilised and its innate ability to utilise it. At the start of the next generation both resources are replenished.
+
+
+Individuals encounter fixed quantities of the two resources at a certain rate. When a resource is encountered, one of the individuals is selected and it can choose based on its previous encounters whether to utilise the resource or reject it. If the individual chooses to utilise the resource, it will have a smaller probability to be selected in the future. When both resources are almost depleted, each individual gains a fitness based on the quantity of the resources it utilised and its innate ability to utilise them. At the start of the next generation both resources are replenished.
+
+
+
+In a population of N individuals, each individual has a trait X which has a value between -1 and 1. These individuals can utilise two different resources with a certain efficiency dependent on their X value in the following way: e1=exp(-1*(1+X)^2) and e2=exp(-1*(1-X)^2). The individuals gather resources during a number of rounds per generation. In a random order, the individuals can choose which resource to utilise. They will decide to feed on resource 1 when the inequality R1*e1/sum(e1i)>R2*e2/sum(e2j) is satisfied, in which R1 and R2 represent the quantities of the resources and e1i and e2j stand for the feeding efficiencies of all individuals already present at the respective resources plus the individual that is currently choosing. Otherwise, they choose to utilise resource 2. When all individuals have chosen, each resource is divided among the individuals present at that resource and each individual will get a fraction e1/sum(e1i) or e2/sum(e2j) of the resource. If this goes on for an infinite number of rounds, this model collapses into the analytical model. At the end of a generation, each individual has a fitness, which is equal to the sum of the amount of resources it consumed. These fitnesses are used in a weighted lottery to decide which individuals reproduce and pass on their X value to the next generation. There is a small chance μ that a mutation occurs, which changes the X value by a quantity taken from a Gaussian distribution with mean 0 and standard deviation σ.
