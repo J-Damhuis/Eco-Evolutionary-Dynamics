@@ -4,8 +4,8 @@
 #include <fstream>
 #include <w32api/ntdef.h>
 
-const int n = 100;
-const int g = 100;
+const int n = 1000;
+const int g = 1000;
 const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
@@ -26,7 +26,7 @@ public:
 
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
-    std::uniform_real_distribution<double> chooseValue(-1.0, 1.0);
+    std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
     for (int i = 0; i < Population.size(); ++i) {
         Population[i].FeedEff = chooseValue(rng);
         Population[i].Food = 0.0;
@@ -154,17 +154,22 @@ void mutate(std::vector<Individual> &Population) {
 }
 
 void simulate(std::vector<Individual> &Population) {
+    ofs2 << "0";
+    for (int i = 0; i < Population.size(); ++i) {
+        ofs2 << "," << Population[i].FeedEff;
+    }
+    ofs2 << "\n";
     for (int t = 0; t < g; ++t) {
         ofs << t << ",";
-        ofs2 << t;
-        for (int i = 0; i < Population.size(); ++i) {
-            ofs2 << "," << Population[i].FeedEff;
-        }
-        ofs2 << "\n";
         chooseResource(Population);
         std::vector<double> Fitness = getFitness(Population);
         reproduce(Population, Fitness);
         mutate(Population);
+        ofs2 << t+1;
+        for (int i = 0; i < Population.size(); ++i) {
+            ofs2 << "," << Population[i].FeedEff;
+        }
+        ofs2 << "\n";
         std::cout << "Finished generation " << t << "\n";
     }
 }
