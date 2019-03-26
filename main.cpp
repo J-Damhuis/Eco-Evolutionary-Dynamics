@@ -2,15 +2,15 @@
 #include <vector>
 #include <random>
 #include <fstream>
-#include <w32api/ntdef.h>
 
 const int n = 1000;
 const int g = 1000;
 const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
-const double beta = 1.0;
-const double s = 1.0;
+double beta = 1.0;
+double s = 1.0;
+int seed = 1;
 std::vector<double> MaxR = {10.0, 10.0};
 std::vector<double> R = MaxR;
 std::vector<std::vector<int> > Ind = {{}, {}};
@@ -26,7 +26,7 @@ public:
 
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
-    std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
+    std::uniform_real_distribution<double> chooseValue(-1.0, 1.0);
     for (int i = 0; i < Population.size(); ++i) {
         Population[i].FeedEff = chooseValue(rng);
         Population[i].Food = 0.0;
@@ -174,7 +174,19 @@ void simulate(std::vector<Individual> &Population) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if(argc > 1) {
+        if(argc == 4) {
+            sscanf(argv[1], "%lf", &beta);
+            sscanf(argv[2], "%lf", &s);
+            sscanf(argv[3], "%d", &seed);
+        }
+        else {
+            return 1;
+        }
+    }
+    rng.seed(seed);
+    std::cout << "Using seed " << seed << "\n\n";
     std::vector<Individual> Population = createPopulation();
     if (!ofs.is_open()) {
         return 1;

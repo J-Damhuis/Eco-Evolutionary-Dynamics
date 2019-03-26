@@ -4,7 +4,7 @@ library(gridExtra)
 heatmap <- "heatmap.csv"
 filename <- "test.csv"
 stepsize <- 0.05
-everyntimesteps <- 10
+everyntimesteps <- 1
 
 makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1) {
   
@@ -14,9 +14,18 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1) {
     geom_line(aes(y = Resource.2, colour = "Resource 2")) + ylab("Fraction of population") + ylim(min = 0, max = 1) +
     scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) #Create lineplot for fractions of population feeding on resources
   
+  png("plots.png")
+  print(plot1)
+  
+  png("fraction.png")
+  print(plot1)
+  
   plot2 <- ggplot(d, aes(x = Time)) + geom_line(aes(y = Resource.1.1, colour = "Resource 1")) + 
     geom_line(aes(y = Resource.2.1, colour = "Resource 2")) + ylab("Mean X value") + ylim(min = -1, max = 1) +
     scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) #Create lineplot for mean X value of population feeding on resources
+  
+  png("evolution.png")
+  print(plot2)
   
   d <- read.csv(heatmap, header = TRUE) #Create data frame for heatmap of csv file
   d2 <- as.data.frame(matrix(0, 2 / stepsize, (length(d[, 1]) - 1) / everyntimesteps + 1)) #Create data frame of 0s with 2/stepsize rows and as many columns as the number of time steps
@@ -45,6 +54,10 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1) {
   colnames(d2)[colnames(d2)=="value"] <- "count" #Rename value column to count
   
   plot3 <- ggplot(d2, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) #Create heatmap plot
+  
+  png("heatmap.png")
+  print(plot3)
+  dev.off()
   
   grid.arrange(plot1, plot2, plot3, ncol = 2) #Show all plots
 }
