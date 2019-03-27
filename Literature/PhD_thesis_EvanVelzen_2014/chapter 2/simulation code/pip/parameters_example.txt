@@ -1,9 +1,0 @@
-1.4 n
-1 growthrate
-4500000 total nutrients
-5000 timesteps before calculating fitness
-0.005 resolution time
-0.005 resolution x
-10000 timesteps to calculate fitness
-0.5 begin x
-1 end x
