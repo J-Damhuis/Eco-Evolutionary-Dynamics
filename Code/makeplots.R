@@ -1,10 +1,11 @@
 library(ggplot2)
 library(reshape)
+library(grid)
 library(gridExtra)
 heatmap <- "heatmap.csv" #Name of file which has data for heatmap and speciation plot
 filename <- "test.csv" #Name of file which has data for evolution and fraction plots
 stepsize <- 0.05 #Height of one band on heatmap (smaller = higher resolution)
-everyntimesteps <- 100 #Width of one band on heatmap (smaller = higher resolution)
+everyntimesteps <- 50 #Width of one band on heatmap (smaller = higher resolution)
 threshold <- 26 #Cut-off point for speciation
 
 makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimesteps = 1) {
@@ -13,19 +14,21 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   
   plot1 <- ggplot(d, aes(x = Time)) + geom_line(aes(y = Resource.1, colour = "Resource 1")) + 
     geom_line(aes(y = Resource.2, colour = "Resource 2")) + ylab("Fraction of population") + ylim(min = 0, max = 1) +
-    scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + theme(legend.position = "top") #Create lineplot for fractions of population feeding on resources
+    scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + 
+    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for fractions of population feeding on resources
   
-  png("fraction.png", type = "cairo") #Create png file named fraction
-  print(plot1) #Print plot1 onto fraction.png
-  dev.off() #Close png file
+  png("fraction.png", type = "cairo") 
+  print(plot1) 
+  dev.off() 
   
   plot2 <- ggplot(d, aes(x = Time)) + geom_line(aes(y = Resource.1.1, colour = "Resource 1")) + 
     geom_line(aes(y = Resource.2.1, colour = "Resource 2")) + ylab("Mean X value") + ylim(min = -1, max = 1) +
-    scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + theme(legend.position = "top") #Create lineplot for mean X value of population feeding on resources
+    scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + 
+    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for mean X value of population feeding on resources
   
-  png("evolution.png", type = "cairo") #Create png file named evolution
-  print(plot2) #Print plot2 onto evolution.png
-  dev.off() #Close png file
+  png("evolution.png", type = "cairo") 
+  print(plot2) 
+  dev.off() 
   
   d <- read.csv(heatmap, header = TRUE) #Create data frame for heatmap of csv file
   d2 <- as.data.frame(matrix(0, 2 / stepsize, (length(d[, 1]) - 1) / everyntimesteps + 1)) #Create data frame of 0s with 2/stepsize rows and as many columns as the number of time steps
@@ -39,11 +42,10 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
           }
         }
       }
-      print(i)
     }
   }
   
-  times <- rep(seq(0.5 * everyntimesteps, (length(d2) - 1) * everyntimesteps + 0.5 * everyntimesteps, d[1 + everyntimesteps, 1] - d[1, 1]), each = 2/stepsize) #Create a list of the middle between time points
+  times <- rep(seq(0, (length(d2) - 1) * everyntimesteps, d[1 + everyntimesteps, 1] - d[1, 1]), each = 2/stepsize) #Create a list of the time points
   
   X <- seq(-1 + stepsize / 2, 1 - stepsize / 2, stepsize) #Create a list of the middle between steps
   d2 <- cbind(X, d2) #Add step list to front of data frame
@@ -55,9 +57,9 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   
   plot3 <- ggplot(d2, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + theme(legend.position = "top") #Create heatmap plot
   
-  png("heatmap.png", type = "cairo") #Create png file named heatmap
-  print(plot3) #Print plot3 onto heatmap.png
-  dev.off() #Close png file
+  png("heatmap.png", type = "cairo") 
+  print(plot3) 
+  dev.off() 
   
   d4 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1]) - 1)) #Create data frame to keep track of speciation values
   vec <- vector() #Create vector to keep track of generations when there are 2 species
@@ -83,22 +85,38 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
     }
   }
   
-  for (i in 1:(length(vec)/2)) { #For half of the vector length
-    cat(vec[i*2-1], vec[i*2], sep = ":") #Print the first and last consecutive generation with 2 species present
-    cat("\n") #Go to new line
+  cat("\n") #Go to new line
+  if (length(vec) > 1) { #If speciation occured
+    cat("There were two species during the following generations:\n") #Print that text
+    for (i in 1:(length(vec)/2)) { #For half of the vector length
+      cat(vec[i*2-1], vec[i*2], sep = ":") #Print the first and last consecutive generation with 2 species present
+      cat("\n") #Go to new line
+    }
   }
+  else { #If no speciation occured
+    cat("No speciation occured\n") #Print that text
+  }
+  cat("\n") #Go to new line
   
   colnames(d4) <- c("time", "speciation") #Change column names of speciation data frame
   
-  plot4 <- ggplot(d4, aes(time, speciation)) + geom_line() #Create lineplot for speciation
+  plot4 <- ggplot(d4, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
+    geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
+    scale_colour_manual("Lines", values = c("Value" = "black", "Threshold" = "red")) + 
+    scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) + 
+    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for speciation
   
-  png("speciation.png", type = "cairo") #Create png file named speciation
-  print(plot4) #Print plot4 onto speciation.png
-  dev.off() #Close png file
+  png("speciation.png", type = "cairo")
+  print(plot4) 
+  dev.off() 
   
-  png("plots.png", type = "cairo") #Create png file named plots
-  print(grid.arrange(plot1, plot2, plot3, plot4, ncol = 2)) #Print all 4 plots in 2x2 grid onto plots.png
-  dev.off() #Close png file
+  plots <- arrangeGrob(plot1, plot2, plot3, plot4, ncol = 2)
+  
+  png("plots.png", type = "cairo") 
+  grid.draw(plots)
+  dev.off() 
+  
+  graphics.off()
 }
 
 makeplots(filename, heatmap, threshold, stepsize, everyntimesteps) #Execute function
