@@ -5,11 +5,11 @@
 
 const int n = 1000;
 const int g = 1000;
-const int d = 1;
+const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
 double beta = 0.0;
-double s = 10.0;
+double s = 1.0;
 int seed = 1;
 std::vector<double> MaxR = {10.0, 10.0};
 std::vector<double> R = MaxR;
@@ -26,9 +26,9 @@ public:
 
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
-    //std::uniform_real_distribution<double> chooseValue(-1.0, 1.0);
+    std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
     for (int i = 0; i < Population.size(); ++i) {
-        Population[i].FeedEff = -1.0;
+        Population[i].FeedEff = chooseValue(rng);
         Population[i].Food = 0.0;
         //std::cout << i << ": " << Population[i].FeedEff << "\n";
     }
@@ -59,7 +59,7 @@ void getFood(std::vector<Individual> &Population) {
             Sum += calcEnergy(Population[Ind[j][i]].FeedEff, j);
         }
         for (int i = 0; i < Ind[j].size(); ++i) {
-            Population[Ind[j][i]].Food += R[j] * calcEnergy(Population[Ind[j][i]].FeedEff, j) / Sum;
+            Population[Ind[j][i]].Food += calcEnergy(Population[Ind[j][i]].FeedEff, j) * R[j] / Sum;
             //std::cout << Ind[j][i] << ": " << Population[Ind[j][i]].Food << "\n";
         }
     }

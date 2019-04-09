@@ -1,0 +1,12 @@
+﻿Made model with choice based on number of individuals present at resources and individual's feeding efficiency
+Talked with Luis about different resource dynamics and discussed three different ways of implementing them
+Had a talk and decided on using different model with choice based on summed feeding efficiencies of individuals present at resources
+Simulated with β ranging from 0.0 to 1.0 and s ranging from 0.0 to 10.0.
+Found out speciation occurs even at high selection coefficients with random choice; also oscillations occur
+Planned to change the model to use variable population size rather than a constant one (this has not been done yet)
+Hypothesised that this could be because fitness gained is based on relative feeding efficiency, meaning that individuals with low feeding efficiency can still obtain high fitness if the other individuals have an even lower feeding efficiency
+Proposed a way to fix this by changing the amount of the resource that could be found to depend on the sum of the feeding efficiencies of the individuals present at the resource
+Ran a few more simulations with different parameter values:
+	- β = 0.0, s = 10.0 and 300 feeding rounds: no different dynamics than at 10 feeding rounds
+	- β = 0.0, s = 100.0 and 350 feeding rounds: speciation still occurs
+	- β = 0.0, s = 1000.0 and 350 feeding rounds: no more speciation; hardly any variation within population; population mean still moves from fitness optimum
