@@ -1,4 +1,4 @@
-Made model with choice based on number of individuals present at resources and individual's feeding efficiency
+﻿Made model with choice based on number of individuals present at resources and individual's feeding efficiency
 Talked with Luis about different resource dynamics and discussed three different ways of implementing them
 Had a talk and decided on using different model with choice based on summed feeding efficiencies of individuals present at resources
 Made that model
@@ -11,3 +11,8 @@ Ran a few more simulations with different parameter values:
 	- β = 0.0, s = 10.0 and 300 feeding rounds: no different dynamics than at 10 feeding rounds
 	- β = 0.0, s = 100.0 and 350 feeding rounds: speciation still occurs
 	- β = 0.0, s = 1000.0 and 350 feeding rounds: no more speciation; hardly any variation within population; population mean still moves from fitness optimum
+Talked with Rampal and he agreed with our way of changing the model. Main things to keep in mind:
+	- Could be a numerical issue when taking the exponential of a large (negative) number -> can be checked by using step-based fitness landscape
+	- Kmeans might not be good enough at defining two clusters when one of them is a lot smaller than the other -> he will see if he can find a different method someone used
+	- System dynamics can be quite different when you use a different scaling factor for the amount of resource which is taken up
+	- Think about how the model would scale if there were more than two resources (don't have to do much with this though)
