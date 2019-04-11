@@ -1,6 +1,7 @@
-﻿Made model with choice based on number of individuals present at resources and individual's feeding efficiency
+Made model with choice based on number of individuals present at resources and individual's feeding efficiency
 Talked with Luis about different resource dynamics and discussed three different ways of implementing them
 Had a talk and decided on using different model with choice based on summed feeding efficiencies of individuals present at resources
+Made that model
 Simulated with β ranging from 0.0 to 1.0 and s ranging from 0.0 to 10.0.
 Found out speciation occurs even at high selection coefficients with random choice; also oscillations occur
 Planned to change the model to use variable population size rather than a constant one (this has not been done yet)
