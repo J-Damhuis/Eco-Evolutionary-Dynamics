@@ -2,13 +2,14 @@ library(ggplot2)
 library(reshape)
 library(grid)
 library(gridExtra)
-heatmap <- "heatmap.csv" #Name of file which has data for heatmap and speciation plot
+heatmap <- "heatmap.csv" #Name of file which has data for heatmap
 filename <- "test.csv" #Name of file which has data for evolution and fraction plots
+gaps <- "gaps.csv" #Name of file which has data for speciation plot
 stepsize <- 0.05 #Height of one band on heatmap (smaller = higher resolution)
-everyntimesteps <- 50 #Width of one band on heatmap (smaller = higher resolution)
-threshold <- 26 #Cut-off point for speciation
+everyntimesteps <- 1 #Width of one band on heatmap (smaller = higher resolution)
+threshold <- 1 #Cut-off point for speciation
 
-makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimesteps = 1) {
+makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, everyntimesteps = 1) {
   
   d <- read.csv(filename, header = TRUE) #Create data frame for lineplots of csv file
   
@@ -33,15 +34,16 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   d <- read.csv(heatmap, header = TRUE) #Create data frame for heatmap of csv file
   d2 <- as.data.frame(matrix(0, 2 / stepsize, (length(d[, 1]) - 1) / everyntimesteps + 1)) #Create data frame of 0s with 2/stepsize rows and as many columns as the number of time steps
   
-  for(i in 1:length(d[, 1])) { #Each timestep
-    if((i - 1) %% everyntimesteps == 0) { #Only use every everyntimesteps time step
-      for(k in 1:length(d2[, 1])) { #Each stepsize
-        for(j in 2:length(d[1, ])) { #Each individual
-          if(d[i, j] <= k * stepsize - 1 & d[i, j] >= (k - 1) * stepsize - 1) { #If the X value is within current step
-            d2[k, (i - 1) / everyntimesteps + 1] <- d2[k, (i - 1) / everyntimesteps + 1] + 1 #Add one to respective step
-          }
+  for (i in 1:length(d[, 1])) { #Each timestep
+    if ((i - 1) %% everyntimesteps == 0) { #Only use every everyntimesteps time step
+      k <- length(d2[, 1]) #Set k to highest step
+      for (j in 2:length(d[1, ])) { #Each individual
+        while (d[i, j] < (k - 1) * stepsize - 1) { #As long as the X value is smaller than lower bound of current step
+          k <- k - 1 #Set k to the next step below the current step
         }
+        d2[k, (i - 1) / everyntimesteps + 1] <- d2[k, (i - 1) / everyntimesteps + 1] + 1 #Add one to respective step
       }
+      print(i)
     }
   }
   
@@ -61,16 +63,16 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   print(plot3) 
   dev.off() 
   
-  d4 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1]) - 1)) #Create data frame to keep track of speciation values
+  d4 <- read.csv(gaps, header = TRUE)
+  
   vec <- vector() #Create vector to keep track of generations when there are 2 species
-  for (i in 2:length(d[,1])) { #For every generation except generation 0
-    d3 <- d[i,] #Write X values of current generation to new data frame
-    d3 <- t(d3) #Transpose data frame
-    d3 <- d3[-1,] #Remove time step from data frame
-    clusters <- kmeans(d3, 2) #Calculate kmeans
-    d4[i-1,1] <- i-1 #Set first column of speciation data frame to current generation
-    d4[i-1,2] <- clusters$betweenss - clusters$tot.withinss #Set second column of speciation data frame to speciation value
-    if (clusters$betweenss - clusters$tot.withinss > threshold) { #If speciation value is high enough to assume 2 species are present
+  
+  d5 <- as.data.frame(matrix(ncol = 2, nrow = length(d4[,1])))
+  for (i in 1:length(d4[,1])) {
+    d5[i,1] <- i-1
+    d5[i,2] <- d4[i,2] / d4[i,3]
+    
+    if (d5[i,2] > threshold) { #If speciation value is high enough to assume 2 species are present
       if (length(vec) == 0) { #If this is first time 2 species are present
         vec[1] <- i #Set first value of vector to current generation
         vec[2] <- i #Set second value of vector to current generation (this will change to last consecutive generation with 2 species present)
@@ -98,9 +100,9 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   }
   cat("\n") #Go to new line
   
-  colnames(d4) <- c("time", "speciation") #Change column names of speciation data frame
+  colnames(d5) <- c("time", "speciation") #Change column names of speciation data frame
   
-  plot4 <- ggplot(d4, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
+  plot4 <- ggplot(d5, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
     geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
     scale_colour_manual("Lines", values = c("Value" = "black", "Threshold" = "red")) + 
     scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) + 
@@ -119,4 +121,4 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   graphics.off()
 }
 
-makeplots(filename, heatmap, threshold, stepsize, everyntimesteps) #Execute function
+makeplots(filename, heatmap, gaps, threshold, stepsize, everyntimesteps) #Execute function
