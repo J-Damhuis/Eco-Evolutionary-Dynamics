@@ -9,8 +9,9 @@ const int g = 1000;
 const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
-double beta = 0.0;
-double s = 9.0;
+double beta = 1.0;
+double s = 2.1;
+double delta = 0.5;
 int seed = 1;
 std::vector<double> MaxR = {10.0, 10.0};
 std::vector<double> R = MaxR;
@@ -61,7 +62,7 @@ void getFood(std::vector<Individual> &Population) {
             Sum += calcEnergy(Population[Ind[j][i]].FeedEff, j);
         }
         for (int i = 0; i < Ind[j].size(); ++i) {
-            Population[Ind[j][i]].Food += calcEnergy(Population[Ind[j][i]].FeedEff, j) * R[j] / Sum;
+            Population[Ind[j][i]].Food += calcEnergy(Population[Ind[j][i]].FeedEff, j) * R[j] / (Sum + pow(delta, -1) - 1);
             //std::cout << Ind[j][i] << ": " << Population[Ind[j][i]].Food << "\n";
         }
     }
@@ -71,7 +72,9 @@ void getFood(std::vector<Individual> &Population) {
 void chooseResource(std::vector<Individual> &Population) {
     std::vector<double> Sum = {0.0, 0.0};
     std::vector<double> Indiv = {0, 0};
+    std::vector<double> FoundFood = {0.0, 0.0};
     for (int e = 0; e < d; ++e) {
+        std::vector<double> TempSum = {0.0, 0.0};
         shuffle(Population);
         /*for (int i = 0; i < Population.size(); ++i) {
             std::cout << i << ": " << Population[i].FeedEff << "\n";
@@ -86,6 +89,7 @@ void chooseResource(std::vector<Individual> &Population) {
                 int j = r2 > 0.5 ? 0 : 1;
                 Ind[j].push_back(i);
                 Sum[j] += Population[i].FeedEff;
+                TempSum[j] += calcEnergy(Population[i].FeedEff, j);
                 Indiv[j] += 1.0;
                 //std::cout << i << ": " << j << "\n";
             }
@@ -96,7 +100,7 @@ void chooseResource(std::vector<Individual> &Population) {
                         Energy[j] += calcEnergy(Population[Ind[j][k]].FeedEff, j);
                     }
                     Energy[j] += calcEnergy(Population[i].FeedEff, j);
-                    Energy[j] = R[j] * calcEnergy(Population[i].FeedEff, j) / Energy[j];
+                    Energy[j] = R[j] * calcEnergy(Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
                 }
                 int j;
                 if (Energy[0] > Energy[1]) {
@@ -108,9 +112,15 @@ void chooseResource(std::vector<Individual> &Population) {
                 }
                 Ind[j].push_back(i);
                 Sum[j] += Population[i].FeedEff;
+                TempSum[j] += calcEnergy(Population[i].FeedEff, j);
                 Indiv[j] += 1.0;
                 //std::cout << i << ": " << j << " - " << Energy[0] << " vs " << Energy[1] << "\n";
             }
+        }
+        //std::cout << "Round " << e << ":\n";
+        for (int j = 0; j < FoundFood.size(); ++j) {
+            FoundFood[j] += TempSum[j] / (TempSum[j] + pow(delta, -1) - 1);
+            //std::cout << "-Resource " << j << ": " << TempSum[j] / (TempSum[j] + pow(delta, -1) - 1) << "(" << TempSum[j] << ")\n";
         }
         //std::cout << "\n";
         getFood(Population);
@@ -118,8 +128,10 @@ void chooseResource(std::vector<Individual> &Population) {
             Ind[i].clear();
         }
     }
-    ofs << Indiv[0]/(Population.size()*d) << "," << Sum[0]/Indiv[0] << ","
-        << Indiv[1]/(Population.size()*d) << "," << Sum[1]/Indiv[1] << "\n";
+    Indiv[0] = Indiv[0] == 0.0 ? 1.0 : Indiv[0];
+    Indiv[1] = Indiv[1] == 0.0 ? 1.0 : Indiv[1];
+    ofs << Indiv[0]/(Population.size()*d) << "," << Sum[0]/Indiv[0] << "," << FoundFood[0]/d << ","
+        << Indiv[1]/(Population.size()*d) << "," << Sum[1]/Indiv[1] << "," << FoundFood[1]/d << "\n";
 }
 
 std::vector<double> getFitness(std::vector<Individual> &Population) {
@@ -197,6 +209,7 @@ void simulate(std::vector<Individual> &Population) {
     double meangap = calcMeanGap(Population);
     ofs3 << "0," << maxgap << "," << meangap << "\n";
     for (int t = 0; t < g; ++t) {
+        //std::cout << "Generation " << t << "\n\n";
         ofs << t << ",";
         chooseResource(Population);
         std::vector<double> Fitness = getFitness(Population);
@@ -217,10 +230,11 @@ void simulate(std::vector<Individual> &Population) {
 
 int main(int argc, char* argv[]) {
     if(argc > 1) {
-        if(argc == 4) {
+        if(argc == 5) {
             sscanf(argv[1], "%lf", &beta);
             sscanf(argv[2], "%lf", &s);
-            sscanf(argv[3], "%d", &seed);
+            sscanf(argv[3], "%lf", &delta);
+            sscanf(argv[4], "%d", &seed);
         }
         else {
             return 1;
@@ -235,7 +249,7 @@ int main(int argc, char* argv[]) {
     if (!ofs2.is_open()) {
         return 1;
     }
-    ofs << "Time,Resource 1,Resource 1,Resource 2,Resource 2\n";
+    ofs << "Time,Resource 1,Resource 1,Resource 1,Resource 2,Resource 2,Resource 2\n";
     ofs2 << "Time";
     for (int i = 0; i < Population.size(); ++i) {
         ofs2 << ",Individual " << i;

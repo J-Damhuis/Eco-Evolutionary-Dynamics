@@ -29,7 +29,16 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   
   png("evolution.png", type = "cairo") 
   print(plot2) 
-  dev.off() 
+  dev.off()
+  
+  plot3 <- ggplot(d, aes(x = Time)) + geom_line(aes(y = Resource.1.2, colour = "Resource 1")) + 
+    geom_line(aes(y = Resource.2.2, colour = "Resource 2")) + ylab("Fraction of resource utilised") + ylim(min = 0, max = 1) +
+    scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + 
+    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for mean X value of population feeding on resources
+  
+  png("efficiency.png", type = "cairo") 
+  print(plot3) 
+  dev.off()
   
   d <- read.csv(heatmap, header = TRUE) #Create data frame for heatmap of csv file
   d2 <- as.data.frame(matrix(0, 2 / stepsize, (length(d[, 1]) - 1) / everyntimesteps + 1)) #Create data frame of 0s with 2/stepsize rows and as many columns as the number of time steps
@@ -57,10 +66,10 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   d2$time <- times #Add new column to data frame with values of time points
   colnames(d2)[colnames(d2)=="value"] <- "count" #Rename value column to count
   
-  plot3 <- ggplot(d2, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + theme(legend.position = "top") #Create heatmap plot
+  plot4 <- ggplot(d2, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + theme(legend.position = "top") #Create heatmap plot
   
   png("heatmap.png", type = "cairo") 
-  print(plot3) 
+  print(plot4) 
   dev.off() 
   
   d4 <- read.csv(gaps, header = TRUE)
@@ -102,17 +111,17 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   
   colnames(d5) <- c("time", "speciation") #Change column names of speciation data frame
   
-  plot4 <- ggplot(d5, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
+  plot5 <- ggplot(d5, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
     geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
     scale_colour_manual("Lines", values = c("Value" = "black", "Threshold" = "red")) + 
     scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) + 
     theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for speciation
   
   png("speciation.png", type = "cairo")
-  print(plot4) 
+  print(plot5) 
   dev.off() 
   
-  plots <- arrangeGrob(plot1, plot2, plot3, plot4, ncol = 2)
+  plots <- arrangeGrob(plot1, plot3, plot2, plot4, plot5, ncol = 2)
   
   png("plots.png", type = "cairo") 
   grid.draw(plots)
