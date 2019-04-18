@@ -2,14 +2,14 @@ library(ggplot2)
 library(reshape)
 library(grid)
 library(gridExtra)
+library(mclust)
 heatmap <- "heatmap.csv" #Name of file which has data for heatmap
 filename <- "test.csv" #Name of file which has data for evolution and fraction plots
-gaps <- "gaps.csv" #Name of file which has data for speciation plot
 stepsize <- 0.05 #Height of one band on heatmap (smaller = higher resolution)
-everyntimesteps <- 1 #Width of one band on heatmap (smaller = higher resolution)
-threshold <- 1 #Cut-off point for speciation
+everyntimesteps <- 10 #Width of one band on heatmap (smaller = higher resolution)
+threshold <- 400 #Cut-off point for speciation
 
-makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, everyntimesteps = 1) {
+makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimesteps = 1) {
   
   d <- read.csv(filename, header = TRUE) #Create data frame for lineplots of csv file
   
@@ -34,7 +34,7 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   plot3 <- ggplot(d, aes(x = Time)) + geom_line(aes(y = Resource.1.2, colour = "Resource 1")) + 
     geom_line(aes(y = Resource.2.2, colour = "Resource 2")) + ylab("Fraction of resource utilised") + ylim(min = 0, max = 1) +
     scale_colour_manual(values = c("Resource 1" = "blue", "Resource 2" = "red")) + 
-    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for mean X value of population feeding on resources
+    theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for mean amount of the resources utilised
   
   png("efficiency.png", type = "cairo") 
   print(plot3) 
@@ -52,7 +52,7 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
         }
         d2[k, (i - 1) / everyntimesteps + 1] <- d2[k, (i - 1) / everyntimesteps + 1] + 1 #Add one to respective step
       }
-      print(i)
+      print(d[i,1])
     }
   }
   
@@ -72,16 +72,17 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   print(plot4) 
   dev.off() 
   
-  d4 <- read.csv(gaps, header = TRUE)
-  
   vec <- vector() #Create vector to keep track of generations when there are 2 species
   
-  d5 <- as.data.frame(matrix(ncol = 2, nrow = length(d4[,1])))
-  for (i in 1:length(d4[,1])) {
-    d5[i,1] <- i-1
-    d5[i,2] <- d4[i,2] / d4[i,3]
+  d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
+  for (i in 1:length(d[,1])) {
+    x <- t(d[i,-1])
+    fit <- Mclust(x, G = 1, model = "V", verbose = FALSE, prior = priorControl())
+    fit2 <- Mclust(x, G = 2, model = "V", verbose = FALSE, prior = priorControl())
+    d2[i,1] <- d[i,1]
+    d2[i,2] <- fit2$loglik - fit$loglik
     
-    if (d5[i,2] > threshold) { #If speciation value is high enough to assume 2 species are present
+    if (d2[i,2] > threshold) { #If speciation value is high enough to assume 2 species are present
       if (length(vec) == 0) { #If this is first time 2 species are present
         vec[1] <- i #Set first value of vector to current generation
         vec[2] <- i #Set second value of vector to current generation (this will change to last consecutive generation with 2 species present)
@@ -94,6 +95,7 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
         vec[length(vec)] <- i #Change last value of vector to current generation
       }
     }
+    print(d[i,1])
   }
   
   cat("\n") #Go to new line
@@ -109,9 +111,9 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   }
   cat("\n") #Go to new line
   
-  colnames(d5) <- c("time", "speciation") #Change column names of speciation data frame
+  colnames(d2) <- c("Time", "Speciation") #Change column names of speciation data frame
   
-  plot5 <- ggplot(d5, aes(x = time)) + geom_line(aes(y = speciation, colour = "Value", linetype = "Value")) + 
+  plot5 <- ggplot(d2, aes(x = Time)) + geom_line(aes(y = Speciation, colour = "Value", linetype = "Value")) + 
     geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
     scale_colour_manual("Lines", values = c("Value" = "black", "Threshold" = "red")) + 
     scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) + 
@@ -130,4 +132,4 @@ makeplots <- function(filename, heatmap, gaps, threshold, stepsize = 0.05, every
   graphics.off()
 }
 
-makeplots(filename, heatmap, gaps, threshold, stepsize, everyntimesteps) #Execute function
+makeplots(filename, heatmap, threshold, stepsize, everyntimesteps) #Execute function

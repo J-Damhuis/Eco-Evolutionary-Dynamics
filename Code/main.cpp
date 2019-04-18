@@ -5,20 +5,19 @@
 #include <algorithm>
 
 const int n = 1000;
-const int g = 1000;
+const int g = 3000;
 const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
-double beta = 1.0;
-double s = 2.1;
-double delta = 0.5;
+double beta = 0.4;
+double s = 1.0;
+double delta = 0.2;
 int seed = 1;
 std::vector<double> MaxR = {10.0, 10.0};
 std::vector<double> R = MaxR;
 std::vector<std::vector<int> > Ind = {{}, {}};
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
-std::ofstream ofs3("gaps.csv");
 std::mt19937_64 rng;
 
 class Individual {
@@ -128,8 +127,6 @@ void chooseResource(std::vector<Individual> &Population) {
             Ind[i].clear();
         }
     }
-    Indiv[0] = Indiv[0] == 0.0 ? 1.0 : Indiv[0];
-    Indiv[1] = Indiv[1] == 0.0 ? 1.0 : Indiv[1];
     ofs << Indiv[0]/(Population.size()*d) << "," << Sum[0]/Indiv[0] << "," << FoundFood[0]/d << ","
         << Indiv[1]/(Population.size()*d) << "," << Sum[1]/Indiv[1] << "," << FoundFood[1]/d << "\n";
 }
@@ -175,29 +172,6 @@ bool sortPop(Individual i, Individual j) {
     return (i.FeedEff > j.FeedEff);
 }
 
-double calcMaxGap(std::vector<Individual> Population) {
-    std::vector<double> gaps(Population.size() - 1);
-    for (int i = 0; i < gaps.size(); ++i) {
-        gaps[i] = Population[i].FeedEff - Population[i + 1].FeedEff;
-    }
-    double maxgap = 0.0;
-    for (int i = 0; i < gaps.size(); ++i) {
-        maxgap = gaps[i] > maxgap ? gaps[i] : maxgap;
-    }
-    return maxgap;
-}
-
-double calcMeanGap(std::vector<Individual> Population) {
-    double meangap = 0.0;
-    for (int i = 0; i < Population.size() - 1; ++i) {
-        for (int j = i + 1; j < Population.size(); ++j) {
-            meangap += Population[i].FeedEff - Population[j].FeedEff;
-        }
-    }
-    meangap /= (Population.size() * (Population.size() - 1) / 2);
-    return meangap;
-}
-
 void simulate(std::vector<Individual> &Population) {
     ofs2 << "0";
     sort(Population.begin(), Population.end(), sortPop);
@@ -205,11 +179,7 @@ void simulate(std::vector<Individual> &Population) {
         ofs2 << "," << Population[i].FeedEff;
     }
     ofs2 << "\n";
-    double maxgap = calcMaxGap(Population);
-    double meangap = calcMeanGap(Population);
-    ofs3 << "0," << maxgap << "," << meangap << "\n";
     for (int t = 0; t < g; ++t) {
-        //std::cout << "Generation " << t << "\n\n";
         ofs << t << ",";
         chooseResource(Population);
         std::vector<double> Fitness = getFitness(Population);
@@ -221,9 +191,6 @@ void simulate(std::vector<Individual> &Population) {
             ofs2 << "," << Population[i].FeedEff;
         }
         ofs2 << "\n";
-        maxgap = calcMaxGap(Population);
-        meangap = calcMeanGap(Population);
-        ofs3 << t + 1 << "," << maxgap << "," << meangap << "\n";
         std::cout << "Finished generation " << t << "\n";
     }
 }
@@ -255,7 +222,6 @@ int main(int argc, char* argv[]) {
         ofs2 << ",Individual " << i;
     }
     ofs2 << "\n";
-    ofs3 << "Time,MaxGap,MeanGap\n";
     simulate(Population);
     return 0;
 }

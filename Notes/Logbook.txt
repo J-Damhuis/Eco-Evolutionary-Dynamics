@@ -16,3 +16,8 @@ Talked with Rampal and he agreed with our way of changing the model. Main things
 	- Kmeans might not be good enough at defining two clusters when one of them is a lot smaller than the other -> he will see if he can find a different method someone used
 	- System dynamics can be quite different when you use a different scaling factor for the amount of resource which is taken up
 	- Think about how the model would scale if there were more than two resources (don't have to do much with this though)
+Rampal sent a different method for defining when two clusters are present (taking the largest gap between two consecutive data points and dividing it by the mean gap between any data point), but it seems to be very inconsistent
+Implemented the fix for fitness being based on relative feeding efficiency and it appears to be working as intended
+Thought of another proxy for speciation: using the largest gap to split the population in two clusters and comparing the means of the two groups, but this seems to say more about the variance of the population than the likelihood of two clusters being present
+Found yet another proxy for speciation: Gaussian Mixture Models. General case of kmeans, but this one can actually use different standard deviations per cluster. It also gives log-likelihoods
+Figured out why the mean X-value of the population moves towards the middle before speciation actually occurs: the fitness advantage of individuals which are better adapted to resource 2 over the individuals which are worse adapted to resource 2 when feeding on resource 2 is greater than the other way around
