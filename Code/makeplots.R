@@ -72,44 +72,8 @@ makeplots <- function(filename, heatmap, threshold, stepsize = 0.05, everyntimes
   print(plot4) 
   dev.off() 
   
-  vec <- vector() #Create vector to keep track of generations when there are 2 species
-  
-  d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
-  for (i in 1:length(d[,1])) {
-    x <- t(d[i,-1])
-    fit <- Mclust(x, G = 1, model = "V", verbose = FALSE, prior = priorControl())
-    fit2 <- Mclust(x, G = 2, model = "V", verbose = FALSE, prior = priorControl())
-    d2[i,1] <- d[i,1]
-    d2[i,2] <- fit2$loglik - fit$loglik
-    
-    if (d2[i,2] > threshold) { #If speciation value is high enough to assume 2 species are present
-      if (length(vec) == 0) { #If this is first time 2 species are present
-        vec[1] <- i #Set first value of vector to current generation
-        vec[2] <- i #Set second value of vector to current generation (this will change to last consecutive generation with 2 species present)
-      }
-      else if (i - vec[length(vec)] > 1) { #If last generation did not have 2 species present
-        vec[length(vec) + 1] <- i #Set next value of vector to current generation
-        vec[length(vec) + 1] <- i #Set next value of vector to current generation
-      }
-      else { #If last generation also had 2 species present
-        vec[length(vec)] <- i #Change last value of vector to current generation
-      }
-    }
-    print(d[i,1])
-  }
-  
-  cat("\n") #Go to new line
-  if (length(vec) > 1) { #If speciation occured
-    cat("There were two species during the following generations:\n") #Print that text
-    for (i in 1:(length(vec)/2)) { #For half of the vector length
-      cat(vec[i*2-1], vec[i*2], sep = ":") #Print the first and last consecutive generation with 2 species present
-      cat("\n") #Go to new line
-    }
-  }
-  else { #If no speciation occured
-    cat("No speciation occured\n") #Print that text
-  }
-  cat("\n") #Go to new line
+  list <- checkspeciation(heatmap, filename, threshold)
+  d2 <- list$avgspec
   
   colnames(d2) <- c("Time", "Speciation") #Change column names of speciation data frame
   

@@ -21,3 +21,9 @@ Implemented the fix for fitness being based on relative feeding efficiency and i
 Thought of another proxy for speciation: using the largest gap to split the population in two clusters and comparing the means of the two groups, but this seems to say more about the variance of the population than the likelihood of two clusters being present
 Found yet another proxy for speciation: Gaussian Mixture Models. General case of kmeans, but this one can actually use different standard deviations per cluster. It also gives log-likelihoods
 Figured out why the mean X-value of the population moves towards the middle before speciation actually occurs: the fitness advantage of individuals which are better adapted to resource 2 over the individuals which are worse adapted to resource 2 when feeding on resource 2 is greater than the other way around
+Put all data together and created a heatmap of the parameter space where the population uses a specialist or generalist strategy or where speciation occurs.
+Showed the heatmap to Rampal and Sander. Some things they mentioned:
+	- It is logical that the branching point is at the generalist strategy. It has something to do with bifurcation analysis
+	- The boundaries between different outcomes of the simulations are pretty sharp. Raphael said that it coincided with his findings however
+	- Old model is a soft selection model whereas new model is a hard selection model
+	- Run more simulations with different population sizes and feeding rounds
