@@ -1,5 +1,5 @@
 nsim <- 10
-filename <- "NewerData.csv"
+filename <- "Delta0.2Long.csv"
 
 d <- read.csv(filename, header = FALSE)
 d2 <- as.data.frame(matrix(0, ncol = 6, nrow = length(d[,1])/nsim))
@@ -59,4 +59,8 @@ for (i in 1:length(d2[,6])) {
 }
 d2 <- cbind(d2, d3)
 
-ggplot(d2, aes(beta, s)) + geom_raster(aes(fill = factor(V1)), interpolate = FALSE) + theme(legend.position = "none") + scale_fill_manual(values = vec)
+plot1 <- ggplot(d2, aes(beta, s)) + geom_raster(aes(fill = factor(V1)), interpolate = FALSE) + theme(legend.position = "none") + 
+  scale_fill_manual(values = vec) + ggtitle("delta = 0.2")
+
+plots <- arrangeGrob(plot1, plot3, plot5, ncol = 3, nrow = 2)
+grid.draw(plots)

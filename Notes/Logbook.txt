@@ -27,3 +27,13 @@ Showed the heatmap to Rampal and Sander. Some things they mentioned:
 	- The boundaries between different outcomes of the simulations are pretty sharp. Raphael said that it coincided with his findings however
 	- Old model is a soft selection model whereas new model is a hard selection model
 	- Run more simulations with different population sizes and feeding rounds
+The two different metrics used to determine whether the population uses a specialist or generalist strategy give the exact same outcome besides the case for s = 0.0
+Lower values of δ cause one of the metrics to determine the population's strategy to stop working since the population would rarely be able to find more than 95% of both resources at a low degree of optimal choice
+Tried to make the threshold dynamic by basing it on δ but I could not find a nice way to make this work
+Had a talk with Raphael to figure out where to take this project and we came up with the following suggestions:
+	- Change population size (this might straighten out the upper bound of the parameter space that supports speciation or even increase it)
+	- Add parapatry to the model (this makes the IBM even more similar to the analytical model)
+	- Add sexual reproduction (though Raphael does not think this would change the behaviour of the model)
+Gave an introductory talk at Rampal's group meeting and some discussion points were brough up:
+	- More species could emerge if I let β evolve (I may look into this)
+	- I could start the simulations with two specialists to make sure that the population ends up using a generalist strategy (to validate the cut-off point of the simulations)
