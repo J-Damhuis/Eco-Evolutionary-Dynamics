@@ -4,7 +4,7 @@
 #include <fstream>
 #include <algorithm>
 
-const int n = 1600; // Population size
+const int n = 3200; // Population size
 const int g = 100; // number of generations, H: linear
 const int d = 10;  // H: linear
 const double mu = 0.5;
@@ -68,6 +68,40 @@ void getFood(std::vector<Individual> &Population) {
     //std::cout << "\n";
 }
 
+/// No idea what this does
+void chooseResourceForLoopElse(
+  std::vector<Individual> &Population,
+  std::vector<double>& Sum,
+  std::vector<double>& TempSum,
+  std::vector<double>& Indiv,
+  const int i
+)
+{
+  std::vector<double> Energy = {0.0, 0.0};
+  for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
+      for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
+          Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
+      }
+      Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
+      Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
+  }
+  int j;
+  if (Energy[0] > Energy[1]) {
+      j = 0;
+  } else if (Energy[0] == Energy[1]) {
+      j = Population[i].FeedEff < 0.0 ? 0 : 1;
+  } else {
+      j = 1;
+  }
+  Ind[j].push_back(i);
+  Sum[j] += Population[i].FeedEff;
+  TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
+  Indiv[j] += 1.0;
+  //std::cout << i << ": " << j << " - " << Energy[0] << " vs " << Energy[1] << "\n";
+
+}
+
+/// No idea what this does
 void chooseResourceForLoop(
   std::vector<Individual> &Population,
   std::vector<double>& Sum,
@@ -88,27 +122,8 @@ void chooseResourceForLoop(
           //std::cout << i << ": " << j << "\n";
       }
       else {
-          std::vector<double> Energy = {0.0, 0.0};
-          for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
-              for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
-                  Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
-              }
-              Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
-              Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
-          }
-          int j;
-          if (Energy[0] > Energy[1]) {
-              j = 0;
-          } else if (Energy[0] == Energy[1]) {
-              j = Population[i].FeedEff < 0.0 ? 0 : 1;
-          } else {
-              j = 1;
-          }
-          Ind[j].push_back(i);
-          Sum[j] += Population[i].FeedEff;
-          TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
-          Indiv[j] += 1.0;
-          //std::cout << i << ": " << j << " - " << Energy[0] << " vs " << Energy[1] << "\n";
+          // Expected to be non-linear
+          chooseResourceForLoopElse(Population, Sum, TempSum, Indiv, i);
       }
   }
 
