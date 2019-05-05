@@ -10,5 +10,5 @@ script:
   - qmake -qt=qt5
   - make release
   - time ./eed 
-  - gprof djog_unos_2018 > gprof.log
+  - gprof eed > gprof.log
   - head gprof.log -n 500
