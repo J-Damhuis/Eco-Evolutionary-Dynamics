@@ -50,18 +50,18 @@ void shuffle(std::vector<Individual> &Population) {
     //std::cout << "\n\n";
 }
 
-double calcEnergy(double x, int i) {
-    return exp(-s * pow(x + pow(-1, i), 2));
+constexpr double calcEnergy(const double local_s, const double x, const int i) {
+    return exp(-local_s * pow(x + pow(-1, i), 2));
 }
 
 void getFood(std::vector<Individual> &Population) {
     for (int j = 0; j < static_cast<int>(Ind.size()); ++j) {
         double Sum = 0.0;
         for (int i = 0; i < static_cast<int>(Ind[j].size()); ++i) {
-            Sum += calcEnergy(Population[Ind[j][i]].FeedEff, j);
+            Sum += calcEnergy(s, Population[Ind[j][i]].FeedEff, j);
         }
         for (int i = 0; i < static_cast<int>(Ind[j].size()); ++i) {
-            Population[Ind[j][i]].Food += calcEnergy(Population[Ind[j][i]].FeedEff, j) * R[j] / (Sum + pow(delta, -1) - 1);
+            Population[Ind[j][i]].Food += calcEnergy(s, Population[Ind[j][i]].FeedEff, j) * R[j] / (Sum + pow(delta, -1) - 1);
             //std::cout << Ind[j][i] << ": " << Population[Ind[j][i]].Food << "\n";
         }
     }
@@ -88,7 +88,7 @@ void chooseResource(std::vector<Individual> &Population) {
                 int j = r2 > 0.5 ? 0 : 1;
                 Ind[j].push_back(i);
                 Sum[j] += Population[i].FeedEff;
-                TempSum[j] += calcEnergy(Population[i].FeedEff, j);
+                TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
                 Indiv[j] += 1.0;
                 //std::cout << i << ": " << j << "\n";
             }
@@ -96,10 +96,10 @@ void chooseResource(std::vector<Individual> &Population) {
                 std::vector<double> Energy = {0.0, 0.0};
                 for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
                     for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
-                        Energy[j] += calcEnergy(Population[Ind[j][k]].FeedEff, j);
+                        Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
                     }
-                    Energy[j] += calcEnergy(Population[i].FeedEff, j);
-                    Energy[j] = R[j] * calcEnergy(Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
+                    Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
+                    Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
                 }
                 int j;
                 if (Energy[0] > Energy[1]) {
@@ -111,7 +111,7 @@ void chooseResource(std::vector<Individual> &Population) {
                 }
                 Ind[j].push_back(i);
                 Sum[j] += Population[i].FeedEff;
-                TempSum[j] += calcEnergy(Population[i].FeedEff, j);
+                TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
                 Indiv[j] += 1.0;
                 //std::cout << i << ": " << j << " - " << Energy[0] << " vs " << Energy[1] << "\n";
             }
