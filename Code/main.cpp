@@ -4,7 +4,7 @@
 #include <fstream>
 #include <algorithm>
 
-const int n = 400; // Population size
+const int n = 800; // Population size
 const int g = 100; // number of generations
 const int d = 10;
 const double mu = 0.5;
