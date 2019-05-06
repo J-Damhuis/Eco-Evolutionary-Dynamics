@@ -36,7 +36,7 @@ std::vector<Individual> createPopulation() {
     }
     //std::cout << "\n";
     return Population;
-};
+}
 
 void shuffle(std::vector<Individual> &Population) {
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
