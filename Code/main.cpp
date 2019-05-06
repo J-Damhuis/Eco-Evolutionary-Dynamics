@@ -6,6 +6,7 @@
 
 const int n = 1000; //Number of individuals
 const int g = 100; //Number of generations
+const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.5; //Mutation rate
 const double sigma = 0.01; //Standard deviation of Gaussian distribution the size of a mutation is taken from
@@ -13,8 +14,7 @@ double beta = 1.0; //Degree of optimal choice
 double s = 1.0; //Selection coefficient
 double delta = 0.2; //Slope of Michaelis-Menten function for resource acquisition
 int seed = 1;
-std::vector<double> MaxR = {10.0, 10.0}; //Max size of resources
-std::vector<double> R = MaxR; //Starting size of resources
+std::vector<double> R = {10.0, 10.0}; //Size of resources
 std::vector<std::vector<int> > Ind = {{}, {}}; //Indices of individuals at each resource
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
@@ -26,16 +26,31 @@ public:
     double Food;
 };
 
+class Resource {
+public:
+    double Sum;
+    double Indiv;
+    double FoundFood;
+};
+
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
     std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
         Population[i].FeedEff = chooseValue(rng);
         Population[i].Food = 0.0;
-        //std::cout << i << ": " << Population[i].FeedEff << "\n";
     }
-    //std::cout << "\n";
     return Population;
+}
+
+std::vector<Resource> createResources() {
+    std::vector<Resource> Resources(r);
+    for (int j = 0; j < static_cast<int>(Resources.size()); ++j) {
+        Resources[j].Sum = 0.0;
+        Resources[j].FoundFood = 0.0;
+        Resources[j].Indiv = 0;
+    }
+    return Resources;
 }
 
 void shuffle(std::vector<Individual> &Population) {
@@ -45,9 +60,7 @@ void shuffle(std::vector<Individual> &Population) {
         Individual tmp = Population[i];
         Population[i] = Population[j];
         Population[j] = tmp;
-        //std::cout << j << "\t";
     }
-    //std::cout << "\n\n";
 }
 
 constexpr double calcEnergy(const double local_s, const double x, const int i) {
@@ -62,82 +75,73 @@ void getFood(std::vector<Individual> &Population) {
         }
         for (int i = 0; i < static_cast<int>(Ind[j].size()); ++i) {
             Population[Ind[j][i]].Food += calcEnergy(s, Population[Ind[j][i]].FeedEff, j) * R[j] / (Sum + pow(delta, -1) - 1);
-            //std::cout << Ind[j][i] << ": " << Population[Ind[j][i]].Food << "\n";
         }
     }
-    //std::cout << "\n";
+}
+
+int makeChoice(double v, std::vector<Individual> &Population, int i) {
+    int l;
+    if (v > beta) {
+        std::uniform_int_distribution<int> chooseResource(0, 1);
+        l = chooseResource(rng);
+    }
+    else {
+        std::vector<double> Energy = {0.0, 0.0};
+        for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
+            for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
+                Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
+            }
+            Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
+            Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
+        }
+        if (Energy[0] > Energy[1]) {
+            l = 0;
+        } else if (Energy[0] == Energy[1]) {
+            l = Population[i].FeedEff < 0.0 ? 0 : 1;
+        } else {
+            l = 1;
+        }
+    }
+    return l;
+}
+
+void updateValues(std::vector<Individual> &Population, std::vector<Resource> &Resources, int j) {
+    std::vector<double> TempSum(r);
+    for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
+        Resources[j].Sum += Population[Ind[j][k]].FeedEff;
+        TempSum[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
+        Resources[j].Indiv += 1.0;
+    }
+    Resources[j].FoundFood += TempSum[j] / (TempSum[j] + pow(delta, -1) - 1);
 }
 
 void chooseResource(std::vector<Individual> &Population) {
-    std::vector<double> Sum = {0.0, 0.0};
-    std::vector<double> Indiv = {0, 0};
-    std::vector<double> FoundFood = {0.0, 0.0};
+    std::vector<Resource> Resources = createResources();
     for (int e = 0; e < d; ++e) {
-        std::vector<double> TempSum = {0.0, 0.0};
         shuffle(Population);
-        /*for (int i = 0; i < Population.size(); ++i) {
-            std::cout << i << ": " << Population[i].FeedEff << "\n";
-        }
-        std::cout << "\n";*/
-        R = MaxR;
         for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
             std::uniform_real_distribution<double> chooseFraction(0.0, 1.0);
-            double r = chooseFraction(rng);
-            if (r > beta) {
-                double r2 = chooseFraction(rng);
-                int j = r2 > 0.5 ? 0 : 1;
-                Ind[j].push_back(i);
-                Sum[j] += Population[i].FeedEff;
-                TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
-                Indiv[j] += 1.0;
-                //std::cout << i << ": " << j << "\n";
-            }
-            else {
-                std::vector<double> Energy = {0.0, 0.0};
-                for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
-                    for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
-                        Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
-                    }
-                    Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
-                    Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
-                }
-                int j;
-                if (Energy[0] > Energy[1]) {
-                    j = 0;
-                } else if (Energy[0] == Energy[1]) {
-                    j = Population[i].FeedEff < 0.0 ? 0 : 1;
-                } else {
-                    j = 1;
-                }
-                Ind[j].push_back(i);
-                Sum[j] += Population[i].FeedEff;
-                TempSum[j] += calcEnergy(s, Population[i].FeedEff, j);
-                Indiv[j] += 1.0;
-                //std::cout << i << ": " << j << " - " << Energy[0] << " vs " << Energy[1] << "\n";
-            }
+            int j = makeChoice(chooseFraction(rng), Population, i);
+            Ind[j].push_back(i);
         }
-        //std::cout << "Round " << e << ":\n";
-        for (int j = 0; j < static_cast<int>(FoundFood.size()); ++j) {
-            FoundFood[j] += TempSum[j] / (TempSum[j] + pow(delta, -1) - 1);
-            //std::cout << "-Resource " << j << ": " << TempSum[j] / (TempSum[j] + pow(delta, -1) - 1) << "(" << TempSum[j] << ")\n";
+        for (int j = 0; j < static_cast<int>(Resources.size()); ++j) {
+            updateValues(Population, Resources, j);
         }
-        //std::cout << "\n";
         getFood(Population);
-        for (int i = 0; i < static_cast<int>(Ind.size()); ++i) {
-            Ind[i].clear();
+        for (int j = 0; j < static_cast<int>(Ind.size()); ++j) {
+            Ind[j].clear();
         }
     }
-    ofs << Indiv[0]/(Population.size()*d) << "," << Sum[0]/Indiv[0] << "," << FoundFood[0]/d << ","
-        << Indiv[1]/(Population.size()*d) << "," << Sum[1]/Indiv[1] << "," << FoundFood[1]/d << "\n";
+    ofs << Resources[0].Indiv/(Population.size()*d) << "," << Resources[0].Sum/Resources[0].Indiv << ","
+        << Resources[0].FoundFood/d << "," << Resources[1].Indiv/(Population.size()*d) << ","
+        << Resources[1].Sum/Resources[1].Indiv << "," << Resources[1].FoundFood/d << "\n";
 }
 
 std::vector<double> getFitness(std::vector<Individual> &Population) {
     std::vector<double> Fitness(Population.size());
     for (int i = 0; i < static_cast<int>(Fitness.size()); ++i) {
         Fitness[i] = Population[i].Food;
-        //std::cout << i << ": " << Population[i].Food << "\n";
     }
-    //std::cout << "\n";
     return Fitness;
 }
 
@@ -153,8 +157,8 @@ void reproduce(std::vector<Individual> &Population, std::vector<double> &Fitness
 void mutate(std::vector<Individual> &Population) {
     std::uniform_real_distribution<double> chooseFraction(0.0, 1.0);
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
-        double r = chooseFraction(rng);
-        if (r < mu) {
+        double v = chooseFraction(rng);
+        if (v < mu) {
             std::normal_distribution<double> chooseMutation(Population[i].FeedEff, sigma);
             Population[i].FeedEff = chooseMutation(rng);
             if (Population[i].FeedEff < -1.0) {
