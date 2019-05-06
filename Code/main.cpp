@@ -36,7 +36,7 @@ std::vector<Individual> createPopulation() {
     }
     //std::cout << "\n";
     return Population;
-};
+}
 
 void shuffle(std::vector<Individual> &Population) {
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
@@ -187,7 +187,7 @@ void simulate(std::vector<Individual> &Population) {
         mutate(Population);
         ofs2 << t+1;
         sort(Population.begin(), Population.end(), sortPop);
-        for (int i = 0; i < Population.size(); ++i) {
+        for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
             ofs2 << "," << Population[i].FeedEff;
         }
         ofs2 << "\n";
