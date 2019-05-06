@@ -1,7 +1,5 @@
 SOURCES += main.cpp
 
-# gillespie.cpp
-
 # C++14
 CONFIG += c++14
 CONFIG += resources_big
