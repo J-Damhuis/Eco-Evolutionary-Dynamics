@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556875828645.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FDADE4E8",
+    "lastKnownWriteTime" : 1556877705,
+    "last_content_update" : 1556877705061,
+    "path" : "~/optchoice/R/outcomeplot.R",
+    "project_path" : "R/outcomeplot.R",
+    "properties" : {
+        "cursorPosition" : "66,14",
+        "scrollLine" : "36"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

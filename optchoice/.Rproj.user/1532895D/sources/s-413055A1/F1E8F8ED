@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556875818496.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3370255592",
+    "id" : "F1E8F8ED",
+    "lastKnownWriteTime" : 1556877967,
+    "last_content_update" : 1556877967760,
+    "path" : "~/optchoice/R/checkspeciation.R",
+    "project_path" : "R/checkspeciation.R",
+    "properties" : {
+        "cursorPosition" : "86,37",
+        "scrollLine" : "62"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

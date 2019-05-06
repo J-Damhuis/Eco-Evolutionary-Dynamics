@@ -37,3 +37,6 @@ Had a talk with Raphael to figure out where to take this project and we came up 
 Gave an introductory talk at Rampal's group meeting and some discussion points were brough up:
 	- More species could emerge if I let β evolve (I may look into this)
 	- I could start the simulations with two specialists to make sure that the population ends up using a generalist strategy (to validate the cut-off point of the simulations)
+When only checking the simulations which ended with a generalist population, the cut-off point seems reasonable: the ones in the parameter space that had mostly generalists still showed generalists
+We noticed that a fair amount of simulations which had a speciation event had one of the species go extinct at some point, so we decided to check the entire parameter space to see if speciation was stable
+Speciation was unstable in the vast majority of parameter space (most likely due to the oscillations which also increase in amplitude)
