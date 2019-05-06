@@ -5,7 +5,7 @@
 #include <algorithm>
 
 const int n = 1000;
-const int g = 3000;
+const int g = 100;
 const int d = 10;
 const double mu = 0.5;
 const double sigma = 0.01;
