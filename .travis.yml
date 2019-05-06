@@ -1,0 +1,14 @@
+language: cpp
+dist: xenial
+compiler: gcc
+
+install: 
+  - sudo apt-get install -qq qt5-qmake qt5-default
+
+script: 
+  - cd Code
+  - qmake -qt=qt5
+  - make release
+  - time ./eed 
+  - gprof eed > gprof.log
+  - head gprof.log -n 500
