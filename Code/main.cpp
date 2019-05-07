@@ -16,6 +16,7 @@ double delta = 0.2; //Slope of Michaelis-Menten function for resource acquisitio
 int seed = 1;
 std::vector<double> R = {10.0, 10.0}; //Size of resources
 std::vector<std::vector<int> > Ind = {{}, {}}; //Indices of individuals at each resource
+std::vector<double> SumFeedEff = {0.0, 0.0}; //Summed feeding efficiencies of the individuals at each resource
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
 std::mt19937_64 rng;
@@ -86,13 +87,9 @@ int makeChoice(double v, std::vector<Individual> &Population, int i) {
         l = chooseResource(rng);
     }
     else {
-        std::vector<double> Energy = {0.0, 0.0};
+        std::vector<double> Energy = SumFeedEff;
         for (int j = 0; j < static_cast<int>(Energy.size()); ++j) {
-            for (int k = 0; k < static_cast<int>(Ind[j].size()); ++k) {
-                Energy[j] += calcEnergy(s, Population[Ind[j][k]].FeedEff, j);
-            }
-            Energy[j] += calcEnergy(s, Population[i].FeedEff, j);
-            Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (Energy[j] + pow(delta, -1) - 1);
+            Energy[j] = R[j] * calcEnergy(s, Population[i].FeedEff, j) / (calcEnergy(s, Population[i].FeedEff, j) + Energy[j] + pow(delta, -1) - 1);
         }
         if (Energy[0] > Energy[1]) {
             l = 0;
@@ -123,6 +120,7 @@ void chooseResource(std::vector<Individual> &Population) {
             std::uniform_real_distribution<double> chooseFraction(0.0, 1.0);
             int j = makeChoice(chooseFraction(rng), Population, i);
             Ind[j].push_back(i);
+            SumFeedEff[j] += calcEnergy(s, Population[i].FeedEff, j);
         }
         for (int j = 0; j < static_cast<int>(Resources.size()); ++j) {
             updateValues(Population, Resources, j);
@@ -130,6 +128,7 @@ void chooseResource(std::vector<Individual> &Population) {
         getFood(Population);
         for (int j = 0; j < static_cast<int>(Ind.size()); ++j) {
             Ind[j].clear();
+            SumFeedEff[j] = 0.0;
         }
     }
     ofs << Resources[0].Indiv/(Population.size()*d) << "," << Resources[0].Sum/Resources[0].Indiv << ","
