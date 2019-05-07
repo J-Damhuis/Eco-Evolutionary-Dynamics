@@ -4,7 +4,7 @@
 #include <fstream>
 #include <algorithm>
 
-const int n = 200; //Number of individuals
+const int n = 400; //Number of individuals
 const int g = 1000; //Number of generations
 const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
