@@ -4,8 +4,8 @@
 #include <fstream>
 #include <algorithm>
 
-const int n = 1000; //Number of individuals
-const int g = 100; //Number of generations
+const int n = 3000; //Number of individuals
+const int g = 1000; //Number of generations
 const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.5; //Mutation rate
