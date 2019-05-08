@@ -4,7 +4,7 @@
 #include <fstream>
 #include <algorithm>
 
-const int n = 3200; //Number of individuals
+const int n = 1000; //Number of individuals
 const int g = 1000; //Number of generations
 const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
@@ -19,6 +19,7 @@ std::vector<std::vector<int> > Ind = {{}, {}}; //Indices of individuals at each 
 std::vector<double> SumFeedEff = {0.0, 0.0}; //Summed feeding efficiencies of the individuals at each resource
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
+//std::ofstream ofs3("fitness.csv");
 std::mt19937_64 rng;
 
 class Individual {
@@ -150,6 +151,7 @@ void reproduce(std::vector<Individual> &Population, std::vector<double> &Fitness
     for (int i = 0; i < static_cast<int>(NewPopulation.size()); ++i) {
         int p = chooseParent(rng);
         Population[i] = NewPopulation[p];
+        Population[i].Food = 0.0;
     }
 }
 
@@ -184,6 +186,13 @@ void simulate(std::vector<Individual> &Population) {
     for (int t = 0; t < g; ++t) {
         ofs << t << ",";
         chooseResource(Population);
+/*
+        ofs3 << t;
+        for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
+            ofs3 << "," << Population[i].Food;
+        }
+        ofs3 << "\n";
+*/
         std::vector<double> Fitness = getFitness(Population);
         reproduce(Population, Fitness);
         mutate(Population);
@@ -220,10 +229,13 @@ int main(int argc, char* argv[]) {
     }
     ofs << "Time,Resource 1,Resource 1,Resource 1,Resource 2,Resource 2,Resource 2\n";
     ofs2 << "Time";
+    //ofs3 << "Time";
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
         ofs2 << ",Individual " << i;
+        //ofs3 << ",Individual " << i;
     }
     ofs2 << "\n";
+    //ofs3 << "\n";
     simulate(Population);
     return 0;
 }

@@ -40,3 +40,6 @@ Gave an introductory talk at Rampal's group meeting and some discussion points w
 When only checking the simulations which ended with a generalist population, the cut-off point seems reasonable: the ones in the parameter space that had mostly generalists still showed generalists
 We noticed that a fair amount of simulations which had a speciation event had one of the species go extinct at some point, so we decided to check the entire parameter space to see if speciation was stable
 Speciation was unstable in the vast majority of parameter space (most likely due to the oscillations which also increase in amplitude)
+Found out that there was a mistake in the code: the food an individual had found would be carried over to its offspring
+Fixed the mistake (added one line *sigh*) and speciation is now stable
+Also noticed that the higher the degree of optimal choice, the sooner the two species split (this also happened at a trait value closer to the extreme)
