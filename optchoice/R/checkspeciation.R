@@ -1,9 +1,9 @@
-checkspeciation <- function(heatmap, filename, output = NA, threshold = 400) {
+checkspeciation <- function(heatmap, filename, output = NA, threshold = 400, calledbyfunction = FALSE) {
   d <- read.csv(heatmap, header = TRUE)
   d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
   d3 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])-9))
   vec <- vector()
-  for (i in 1:length(d[,1])) {
+  for (i in 1:(length(d[,1]))) {
     x <- t(d[i,-1])
     fit <- Mclust(x, G = 1, model = "V", verbose = FALSE, prior = priorControl())
     fit2 <- Mclust(x, G = 2, model = "V", verbose = FALSE, prior = priorControl())
@@ -24,7 +24,7 @@ checkspeciation <- function(heatmap, filename, output = NA, threshold = 400) {
           vec[2] <- d[i,1] #Set second value of vector to current generation (this will change to last consecutive generation with 2 species present)
         }
         else if (i == length(d[,1])) { #If it is the last generation of the simulation
-          if (d[i,1] - vec[length(vec)] < 50) { #If speciation hasn't gone on for long enough
+          if (d[i,1] - vec[length(vec)] == 1 & d[i,1] - vec[length(vec)-1] < 50) { #If speciation hasn't gone on for long enough
             if (length(vec) == 2) { #If this is the only speciation event
               vec <- vector() #Clear vector
             }
@@ -88,6 +88,8 @@ checkspeciation <- function(heatmap, filename, output = NA, threshold = 400) {
     }
   }
 
-  output <- list(spec = d2, avgspec = d3)
-  return(output)
+  if (calledbyfunction) {
+    output <- list(spec = d2, avgspec = d3)
+    return(output)
+  }
 }

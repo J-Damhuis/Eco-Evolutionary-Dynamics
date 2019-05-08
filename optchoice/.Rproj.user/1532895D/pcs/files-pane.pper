@@ -1,6 +1,10 @@
 {
-    "path" : "C:/Users/jdamh/GitHubs/Eco-Evolutionary-Dynamics/optchoice",
+    "path" : "~/optchoice",
     "sortOrder" : [
+        {
+            "ascending" : false,
+            "columnIndex" : 4
+        },
         {
             "ascending" : true,
             "columnIndex" : 2
