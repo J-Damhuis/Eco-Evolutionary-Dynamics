@@ -43,3 +43,5 @@ Speciation was unstable in the vast majority of parameter space (most likely due
 Found out that there was a mistake in the code: the food an individual had found would be carried over to its offspring
 Fixed the mistake (added one line *sigh*) and speciation is now stable
 Also noticed that the higher the degree of optimal choice, the sooner the two species split (this also happened at a trait value closer to the extreme)
+Four simulations' heatmap.csv file was not the right size (not 3000 generarions). No idea why, just decided to run these again
+Checked whether only using the last generation's speciation value rather than that of the whole simulation made a big difference; only differences were at s=0.0 and a few at s=0.2/β=0.2
