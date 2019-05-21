@@ -1,4 +1,4 @@
-makeplots <- function(filename, heatmap, threshold = 400, stepsize = 0.05, everyntimesteps = 1) {
+makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1) {
 
   d <- read.csv(filename, header = TRUE) #Create data frame for lineplots of csv file
 
@@ -45,7 +45,7 @@ makeplots <- function(filename, heatmap, threshold = 400, stepsize = 0.05, every
     }
   }
 
-  times <- rep(seq(0, (length(d2) - 1) * everyntimesteps, d[1 + everyntimesteps, 1] - d[1, 1]), each = 2/stepsize) #Create a list of the time points
+  times <- rep(seq(0, (length(d2) - 1) * (d[1 + everyntimesteps, 1] - d[1, 1]), d[1 + everyntimesteps, 1] - d[1, 1]), each = 2/stepsize) #Create a list of the time points
 
   X <- seq(-1 + stepsize / 2, 1 - stepsize / 2, stepsize) #Create a list of the middle between steps
   d2 <- cbind(X, d2) #Add step list to front of data frame
@@ -61,7 +61,9 @@ makeplots <- function(filename, heatmap, threshold = 400, stepsize = 0.05, every
   print(plot4)
   dev.off()
 
-  list <- checkspeciation(heatmap = heatmap, filename = filename, method = "completion", threshold = threshold, calledbyfunction = TRUE)
+  threshold <- length(d[1,]) * 0.2 + 150
+
+  list <- checkspeciation(heatmap = heatmap, filename = filename, method = "completion", calledbyfunction = TRUE)
   d2 <- list$avgspec
 
   colnames(d2) <- c("Time", "Speciation") #Change column names of speciation data frame
@@ -69,7 +71,7 @@ makeplots <- function(filename, heatmap, threshold = 400, stepsize = 0.05, every
   plot5 <- ggplot(d2, aes(x = Time)) + geom_line(aes(y = Speciation, colour = "Value", linetype = "Value")) +
     geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
     scale_colour_manual("Lines", values = c("Value" = "black", "Threshold" = "red")) +
-    scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) +
+    scale_linetype_manual("Lines", values = c("Value" = 1, "Threshold" = 2)) + ylim(0, NA) +
     theme(legend.position = "top", legend.title = element_blank()) #Create lineplot for speciation
 
   png("speciation.png", type = "cairo")

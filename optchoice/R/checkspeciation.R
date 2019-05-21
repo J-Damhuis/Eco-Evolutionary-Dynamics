@@ -1,6 +1,7 @@
-checkspeciation <- function(heatmap, filename, method, output = NA, threshold = 400, calledbyfunction = FALSE) {
+checkspeciation <- function(heatmap, filename, method, output = NA, calledbyfunction = FALSE) {
+  d <- read.csv(heatmap, header = TRUE)
+  threshold <- length(d[1,]) * 0.2 + 150
   if (calledbyfunction) {
-    d <- read.csv(heatmap, header = TRUE)
     d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
     d3 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])-9))
     vec <- vector()
@@ -125,7 +126,6 @@ checkspeciation <- function(heatmap, filename, method, output = NA, threshold = 
   }
   else {
     if (method == "initiation") {
-      d <- read.csv(heatmap, header = TRUE)
       d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
       d3 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])-9))
       vec <- vector()
@@ -215,7 +215,6 @@ checkspeciation <- function(heatmap, filename, method, output = NA, threshold = 
       }
     }
     else if (method == "completion") {
-      d <- read.csv(heatmap, header = TRUE)
       i <- length(d[,1])
       x <- t(d[i,-1])
       fit <- Mclust(x, G = 1, model = "V", verbose = FALSE, prior = priorControl())

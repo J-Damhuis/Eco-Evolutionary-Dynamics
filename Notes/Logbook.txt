@@ -45,3 +45,13 @@ Fixed the mistake (added one line *sigh*) and speciation is now stable
 Also noticed that the higher the degree of optimal choice, the sooner the two species split (this also happened at a trait value closer to the extreme)
 Four simulations' heatmap.csv file was not the right size (not 3000 generarions). No idea why, just decided to run these again
 Checked whether only using the last generation's speciation value rather than that of the whole simulation made a big difference; only differences were at s=0.0 and a few at s=0.2/β=0.2
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Looked further into using variable population size, but I think that it would not add too much: the main interesting part is the emergent property of carrying capacity and this may not even be emergent.
+To have a variable population size I would need to use a poisson distribution with a certain mean. This mean would have to reflect an individual's fitness. An individual's fitness depends on its own trait value, the total amount of resource, and how many other individuals there are.
+So by tweaking the way the mean depends on an individual's fitness, I would basically be controlling the carrying capacity.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Turns out the difference between the loglikelihoods of GMMs with 1 and 2 groups of simulations with too high selection coefficients for speciation increases as the number of individuals increases. 
+After testing, it turns out this is linear (y=0.12x+20) with y being the average difference in loglikelihoods and x being the number of individuals
+Using a larger population size does not appear to affect the shape of the plots; it just increases the upper bound
+I might use a different metric to determine speciation just so the analysis can be done purely in C++, which reduces the size of the output files
+Raphael uses the ratio of within group variance and all variance
