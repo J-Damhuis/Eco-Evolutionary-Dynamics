@@ -5,15 +5,16 @@
 #include <algorithm>
 
 const int n = 1000; //Number of individuals
-const int g = 1000; //Number of generations
+const int g = 3000; //Number of generations
 const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.5; //Mutation rate
 const double sigma = 0.01; //Standard deviation of Gaussian distribution the size of a mutation is taken from
-double beta = 1.0; //Degree of optimal choice
+double beta = 0.0; //Degree of optimal choice
 double s = 1.0; //Selection coefficient
-double delta = 0.2; //Slope of Michaelis-Menten function for resource acquisition
+double delta = 0.01; //Slope of Michaelis-Menten function for resource acquisition
 int seed = 1;
+int save = 10; //Save feeding efficiencies to file every so many generations
 std::vector<double> R = {10.0, 10.0}; //Size of resources
 std::vector<std::vector<int> > Ind = {{}, {}}; //Indices of individuals at each resource
 std::vector<double> SumFeedEff = {0.0, 0.0}; //Summed feeding efficiencies of the individuals at each resource
@@ -196,12 +197,14 @@ void simulate(std::vector<Individual> &Population) {
         std::vector<double> Fitness = getFitness(Population);
         reproduce(Population, Fitness);
         mutate(Population);
-        ofs2 << t+1;
-        sort(Population.begin(), Population.end(), sortPop);
-        for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
-            ofs2 << "," << Population[i].FeedEff;
+        if ((t+1) % save == 0) {
+            ofs2 << t + 1;
+            sort(Population.begin(), Population.end(), sortPop);
+            for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
+                ofs2 << "," << Population[i].FeedEff;
+            }
+            ofs2 << "\n";
         }
-        ofs2 << "\n";
         std::cout << "Finished generation " << t+1 << "\n";
     }
 }
