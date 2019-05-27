@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
     if (!ofs2.is_open()) {
         return 1;
     }
-    ofs << "Time,Resource 1,Resource 1,Resource 1,Resource 2,Resource 2,Resource 2\n";
+    ofs << "Time,Fraction R0,MeanX R0,Found R0,Fraction R1,MeanX R1,Found R1\n";
     ofs2 << "Time";
     //ofs3 << "Time";
     for (int i = 0; i < static_cast<int>(Population.size()); ++i) {
