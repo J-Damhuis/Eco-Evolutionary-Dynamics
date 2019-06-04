@@ -71,3 +71,17 @@ In a population of N individuals, each individual has a trait X which has a valu
 
 
 In many simulations, oscillations are observed between individuals which are specialised on resource 1 and individuals which are specialised on resource 2. This is because as soon as one kind becomes rarer, the individuals that are still there will have a higher fitness. This causes them to become more common again and even become more common than the other specialists.
+
+
+
+Current tracked parameters and variables:
+-Number of individuals 							        | (n) 				     | (1000, tested more, didn't seem to affect behaviour of model)
+-Fraction of resources which can be found by one perfect individual on its own 	| (δ) 				     | (0.01, 0.05 or 0.2)
+-Degree of optimal choice 							| (β) 				     | (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 or 1.0)
+-Selection coefficient 								| (s) 				     | (0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2 ,1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8 or 3.0)
+-Habitat asymmetry 								| (q) 				     | (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 or 1.0)?
+-Fraction of population feeding on resources					|				     |
+-Mean X values of population feeding on resources				|				     |
+-Fraction of resources found by population					|				     |
+-Difference of loglikelihoods of two clusters and one cluster 			| (degree of ecological speciation)  |
+-Spatial isolation								|				     |
