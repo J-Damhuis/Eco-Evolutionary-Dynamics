@@ -65,7 +65,7 @@ Current tracked parameters and variables:					  Aliases:			       Values:
 -Fraction of resources which can be found by one perfect individual on its own 	| δ 				     | 0.01, 0.05 or 0.2
 -Degree of optimal choice 							| β 				     | 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 or 1.0
 -Selection coefficient 								| s 				     | 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2 ,1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8 or 3.0
--Habitat asymmetry 								| q 				     | 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 or 1.0?
+-Habitat asymmetry 								| q 				     | 0.0, 0.5, or 1.0
 -Fraction of population feeding on resources					|				     |
 -Mean X values of population feeding on resources				|				     |
 -Fraction of resources found by population					|				     |

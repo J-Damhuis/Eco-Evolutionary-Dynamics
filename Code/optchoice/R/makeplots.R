@@ -108,7 +108,7 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1, h
     print(plot8)
     dev.off()
 
-    d5 <- checkdifferentiation(heatmap, habitat)
+    d5 <- checkdifferentiation(heatmap, habitat, calledbyfunction = TRUE)
 
     plot9 <- ggplot(d5, aes(x = d5[,1], y = d5[,2])) + geom_line() + ylab("Degree of differentiation") + ylim(min = 0, max = 1) + xlab("Time")
 
