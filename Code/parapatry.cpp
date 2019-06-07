@@ -3,6 +3,7 @@
 #include <random>
 #include <fstream>
 #include <algorithm>
+#include <iomanip>
 
 const int n = 1000; //Number of individuals
 const int g = 3000; //Number of generations
@@ -12,12 +13,12 @@ const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.5; //Mutation rate
 const double sigma = 0.01; //Standard deviation of Gaussian distribution the size of a mutation is taken from
 const double m = 0.1; //Migration rate
-double beta = 0.0; //Degree of optimal choice
-double s = 1.0; //Selection coefficient
+double beta = 1.0; //Degree of optimal choice
+double s = 0.6; //Selection coefficient
 double delta = 0.01; //Slope of Michaelis-Menten function for resource acquisition
 double q = 0.0; //Habitat asymmetry
-int seed = 1;
-const int save = 1; //Save feeding efficiencies to file every so many generations
+int seed = 4;
+const int save = 10; //Save feeding efficiencies to file every so many generations
 const std::vector<double> R = {10.0, 10.0}; //Total size of resources
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
@@ -139,10 +140,9 @@ void updateValues(std::vector<Individual> &Population, Habitat &Habitat) {
         double TempSum = 0.0;
         double TempSum2 = 0.0;
         for (int individual = 0; individual < static_cast<int>(Habitat.Ind[resource].size()); ++individual) {
-            TempSum2 += Population[Habitat.Ind[resource][individual]].FeedEff;
+            Habitat.Resources[resource].Sum += Population[Habitat.Ind[resource][individual]].FeedEff;
             TempSum += calcEnergy(s, Population[Habitat.Ind[resource][individual]].FeedEff, resource);
         }
-        Habitat.Resources[resource].Sum += TempSum2 / Habitat.Ind[resource].size();
         Habitat.Resources[resource].FoundFood += TempSum / (TempSum + pow(delta, -1) - 1);
         Habitat.Resources[resource].Indiv += Habitat.Ind[resource].size();
     }
@@ -172,17 +172,18 @@ void chooseResource(std::vector<Individual> &Population) {
         //std::cout << "\n";
     }
 
-    ofs << Habitats[0].Resources[0].Indiv / (Habitats[0].Resources[0].Indiv + Habitats[0].Resources[1].Indiv) << ","
-        << Habitats[0].Resources[0].Sum / d << ","
+    ofs << std::fixed << std::setprecision(6)
+        << Habitats[0].Resources[0].Indiv / (Habitats[0].Resources[0].Indiv + Habitats[0].Resources[1].Indiv) << ","
+        << Habitats[0].Resources[0].Sum / Habitats[0].Resources[0].Indiv << ","
         << Habitats[0].Resources[0].FoundFood / d << ","
-        << Habitats[0].Resources[1].Indiv / (Habitats[0].Resources[1].Indiv + Habitats[0].Resources[0].Indiv) << ","
-        << Habitats[0].Resources[1].Sum / d << ","
+        << Habitats[0].Resources[1].Indiv / (Habitats[0].Resources[0].Indiv + Habitats[0].Resources[1].Indiv) << ","
+        << Habitats[0].Resources[1].Sum / Habitats[0].Resources[1].Indiv << ","
         << Habitats[0].Resources[1].FoundFood / d << ","
         << Habitats[1].Resources[0].Indiv / (Habitats[1].Resources[0].Indiv + Habitats[1].Resources[1].Indiv) << ","
-        << Habitats[1].Resources[0].Sum / d << ","
+        << Habitats[1].Resources[0].Sum / Habitats[1].Resources[0].Indiv << ","
         << Habitats[1].Resources[0].FoundFood / d << ","
-        << Habitats[1].Resources[1].Indiv / (Habitats[1].Resources[1].Indiv + Habitats[1].Resources[0].Indiv) << ","
-        << Habitats[1].Resources[1].Sum / d << ","
+        << Habitats[1].Resources[1].Indiv / (Habitats[1].Resources[0].Indiv + Habitats[1].Resources[1].Indiv) << ","
+        << Habitats[1].Resources[1].Sum / Habitats[1].Resources[1].Indiv << ","
         << Habitats[1].Resources[1].FoundFood / d << "\n";
 
 }

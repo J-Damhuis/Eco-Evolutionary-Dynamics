@@ -63,7 +63,7 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1, h
 
   threshold <- length(d2[1,]) * 0.2 + 150
 
-  list <- checkspeciation(heatmap = heatmap, filename = filename, method = "completion", calledbyfunction = TRUE)
+  list <- checkspeciation(heatmap = heatmap, method = "completion", calledbyfunction = TRUE)
   d4 <- list$avgspec
 
   colnames(d4) <- c("Time", "Speciation") #Change column names of speciation data frame

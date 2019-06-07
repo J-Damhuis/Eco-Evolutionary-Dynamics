@@ -1,6 +1,13 @@
-checkspeciation <- function(heatmap, filename, method, output = NA, calledbyfunction = FALSE) {
+checkspeciation <- function(heatmap, method, output = NA, calledbyfunction = FALSE) {
   d <- read.csv(heatmap, header = TRUE)
   threshold <- length(d[1,]) * 0.2 + 150
+
+  meanx <- 0
+  for (i in 2:length(d[length(d[,1]),])) {
+    meanx <- meanx + d[length(d[,1]),i]
+  }
+  meanx <- meanx / (length(d[length(d[,1]),]) - 1)
+
   if (calledbyfunction) {
     d2 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])))
     d3 <- as.data.frame(matrix(ncol = 2, nrow = length(d[,1])-9))
@@ -61,12 +68,6 @@ checkspeciation <- function(heatmap, filename, method, output = NA, calledbyfunc
         }
       }
       print(d[i,1])
-    }
-
-    d4 <- read.csv(filename, header = TRUE)
-    meanx <- d4[length(d4[,2]),2] * d4[length(d4[,3]),3]
-    if (d4[length(d4[,5]),5] > 0) {
-      meanx <- meanx + d4[length(d4[,6]),6] * d4[length(d4[,5]),5]
     }
 
     if (method == "initiation") {
@@ -185,12 +186,6 @@ checkspeciation <- function(heatmap, filename, method, output = NA, calledbyfunc
         print(d[i,1])
       }
 
-      d4 <- read.csv(filename, header = TRUE)
-      meanx <- d4[length(d4[,2]),2] * d4[length(d4[,3]),3]
-      if (d4[length(d4[,5]),5] > 0) {
-        meanx <- meanx + d4[length(d4[,6]),6] * d4[length(d4[,5]),5]
-      }
-
       if (is.na(output)) {
         if (length(vec) > 0) {
           cat("2 Species")
@@ -219,11 +214,6 @@ checkspeciation <- function(heatmap, filename, method, output = NA, calledbyfunc
       x <- t(d[i,-1])
       fit <- Mclust(x, G = 1, model = "V", verbose = FALSE, prior = priorControl())
       fit2 <- Mclust(x, G = 2, model = "V", verbose = FALSE, prior = priorControl())
-      d4 <- read.csv(filename, header = TRUE)
-      meanx <- d4[length(d4[,2]),2] * d4[length(d4[,3]),3]
-      if (d4[length(d4[,5]),5] > 0) {
-        meanx <- meanx + d4[length(d4[,6]),6] * d4[length(d4[,5]),5]
-      }
 
       if (is.na(output)) {
         if (fit2$loglik - fit$loglik > threshold) {
