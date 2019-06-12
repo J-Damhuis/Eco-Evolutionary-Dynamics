@@ -55,7 +55,7 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1, h
   d3$time <- times #Add new column to data frame with values of time points
   colnames(d3)[colnames(d3)=="value"] <- "count" #Rename value column to count
 
-  plot4 <- ggplot(d3, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + theme(legend.position = "top") #Create heatmap plot
+  plot4 <- ggplot(d3, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + scale_fill_viridis_c() + theme(legend.position = "top") #Create heatmap plot
 
   png("heatmap.png", type = "cairo")
   print(plot4)

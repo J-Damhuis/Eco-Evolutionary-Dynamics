@@ -54,3 +54,5 @@ Using a larger population size does not appear to affect the shape of the plots;
 I might use a different metric to determine speciation just so the analysis can be done purely in C++, which reduces the size of the output files
 Raphael uses the ratio of within group variance and all variance
 Using a population size of 4000 does not change the behaviour of the models - just increases the upper bound
+Added in the option for parapatry
+For some reason in some simulations the cluster method only creates one group rather than two, which results in a spatial isolation value of NA

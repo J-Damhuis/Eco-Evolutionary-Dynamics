@@ -63,19 +63,28 @@ outcomeplot <- function(filename, nsim, title = NA) {
       scale_fill_manual(values = vec)
   }
   else {
-    d2 <- as.data.frame(matrix(0, ncol = 3, nrow = length(d[,1])/nsim))
+    d2 <- as.data.frame(matrix(0, ncol = 4, nrow = length(d[,1])/nsim))
 
-    colnames(d2) <- c("beta", "s", "Differentiation")
+    colnames(d2) <- c("beta", "s", "Differentiation", "notNaN")
 
     for (i in 1:length(d[,1])) {
       if (i %% nsim == 1) {
         d2[(i %/% nsim) + 1,1] <- d[i,1]
         d2[(i %/% nsim) + 1,2] <- d[i,2]
       }
-      d2[((i-1) %/% nsim) + 1,3] <- d2[((i-1) %/% nsim) + 1, 3] + d[i,3] / nsim
+      if (!is.na(d[i,3])) {
+        d2[((i-1) %/% nsim) + 1,3] <- d2[((i-1) %/% nsim) + 1, 3] + d[i,3]
+        d2[((i-1) %/% nsim) + 1,4] <- d2[((i-1) %/% nsim) + 1, 4] + 1
+      }
     }
 
-    plot <- ggplot(d2, aes(beta, s)) + geom_raster(aes(fill = Differentiation), interpolate = FALSE) + theme(legend.position = "top")
+    for (i in 1:length(d2[,1])) {
+      d2[i,3] <- d2[i,3] / d2[i,4]
+    }
+
+    plot <- ggplot(d2, aes(beta, s)) + geom_tile(aes(fill = Differentiation)) +
+      scale_fill_gradient2(low="#440154FF", mid="#238A8DFF", high="#FDE725FF", midpoint=0.5, breaks=seq(0,1,0.25),
+                           limits=c(0, 1)) + theme(legend.position = "top")
   }
 
   if (!is.na(title)) {
