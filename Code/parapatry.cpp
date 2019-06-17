@@ -13,12 +13,12 @@ const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.5; //Mutation rate
 const double sigma = 0.01; //Standard deviation of Gaussian distribution the size of a mutation is taken from
 const double m = 0.1; //Migration rate
-double beta = 1.0; //Degree of optimal choice
+double beta = 0.0; //Degree of optimal choice
 double s = 0.6; //Selection coefficient
 double delta = 0.01; //Slope of Michaelis-Menten function for resource acquisition
 double q = 0.0; //Habitat asymmetry
-int seed = 4;
-const int save = 10; //Save feeding efficiencies to file every so many generations
+int seed = 1;
+const int save = 1; //Save feeding efficiencies to file every so many generations
 const std::vector<double> R = {10.0, 10.0}; //Total size of resources
 std::ofstream ofs("test.csv");
 std::ofstream ofs2("heatmap.csv");
@@ -50,12 +50,11 @@ public:
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
     std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
-    std::uniform_int_distribution<int> chooseHabitat(0, 1);
     //std::cout << "Initial values individuals\n";
     for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
         Population[individual].FeedEff = chooseValue(rng);
         Population[individual].Food = 0.0;
-        Population[individual].Habitat = chooseHabitat(rng);
+        Population[individual].Habitat = 0;
         //std::cout << individual << ":\t" << Population[individual].FeedEff << "\t" << Population[individual].Habitat << "\n";
     }
     //std::cout << "\n";
@@ -138,7 +137,6 @@ int makeChoice(double v, std::vector<Individual> &Population, int i, std::vector
 void updateValues(std::vector<Individual> &Population, Habitat &Habitat) {
     for (int resource = 0; resource < static_cast<int>(Habitat.Resources.size()); ++resource) {
         double TempSum = 0.0;
-        double TempSum2 = 0.0;
         for (int individual = 0; individual < static_cast<int>(Habitat.Ind[resource].size()); ++individual) {
             Habitat.Resources[resource].Sum += Population[Habitat.Ind[resource][individual]].FeedEff;
             TempSum += calcEnergy(s, Population[Habitat.Ind[resource][individual]].FeedEff, resource);
@@ -188,29 +186,23 @@ void chooseResource(std::vector<Individual> &Population) {
 
 }
 
-std::vector<std::vector<double> > getFitness(std::vector<Individual> &Population) {
-    std::vector<std::vector<double> > Fitness(h);
+std::vector<double> getFitness(std::vector<Individual> &Population) {
+    std::vector<double> Fitness;
     for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        Fitness[Population[individual].Habitat].push_back(Population[individual].Food);
+        Fitness.push_back(Population[individual].Food);
     }
     return Fitness;
 }
 
-void reproduce(std::vector<Individual> &Population, std::vector<std::vector<double> > &Fitness) {
-    std::vector<std::vector<int> > Ind = {{}, {}};
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        Ind[Population[individual].Habitat].push_back(individual);
-    }
+void reproduce(std::vector<Individual> &Population, std::vector<double> &Fitness) {
     std::vector<Individual> NewPopulation;
     //std::cout << "Individuals that reproduce\n";
-    for (int habitat = 0; habitat < static_cast<int>(Fitness.size()); ++habitat) {
-        std::discrete_distribution<int> chooseParent(Fitness[habitat].begin(), Fitness[habitat].end());
-        for (int individual = 0; individual < static_cast<int>(Ind[habitat].size()); ++individual) {
-            int p = chooseParent(rng);
-            NewPopulation.push_back(Population[Ind[habitat][p]]);
-            NewPopulation.back().Food = 0.0;
-            //std::cout << Ind[habitat][p] << "\n";
-        }
+    std::discrete_distribution<int> chooseParent(Fitness.begin(), Fitness.end());
+    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
+        int p = chooseParent(rng);
+        NewPopulation.push_back(Population[p]);
+        NewPopulation.back().Food = 0.0;
+        //std::cout << p << "\n";
     }
     //std::cout << "\n";
     Population = NewPopulation;
@@ -241,19 +233,18 @@ void migrate(std::vector<Individual> &Population) {
     for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
         Ind[Population[individual].Habitat].push_back(individual);
     }
-    int k = Ind[0].size() < Ind[1].size() ? 0 : 1;
-    std::binomial_distribution<int> chooseMigrations(Ind[k].size(), m);
-    int migrants = chooseMigrations(rng);
-    //std::cout << "Migrations\n";
-    for (int migrant = 0; migrant < migrants; ++migrant) {
-        std::uniform_int_distribution<int> chooseIndividual(0, Ind[k].size()-1);
-        int j = chooseIndividual(rng);
-        //std::cout << "Chose number " << j << "\n";
-        Population[Ind[0][j]].Habitat = 1;
-        Population[Ind[1][j]].Habitat = 0;
-        //std::cout << Ind[0][j] << " <-> " << Ind[1][j] << "\n";
-        Ind[0].erase(Ind[0].begin()+j);
-        Ind[1].erase(Ind[1].begin()+j);
+    //std::cout << "Migrations: \n";
+    for (int habitat = 0; habitat < static_cast<int>(Ind.size()); ++habitat) {
+        std::binomial_distribution<int> chooseMigrations(Ind[habitat].size(), m);
+        int migrants = chooseMigrations(rng);
+        //std::cout << "Habitat " << habitat << "\n";
+        for (int migrant = 0; migrant < migrants; ++migrant) {
+            std::uniform_int_distribution<int> chooseIndividual(0, Ind[habitat].size() - 1);
+            int j = chooseIndividual(rng);
+            //std::cout << "Chose number " << j << "(" << Population[Ind[habitat][j]].FeedEff << ")\n";
+            Population[Ind[habitat][j]].Habitat = Population[Ind[habitat][j]].Habitat == 0 ? 1 : 0;
+            Ind[habitat].erase(Ind[habitat].begin() + j);
+        }
     }
     //std::cout << "\n";
 }
@@ -276,7 +267,7 @@ void simulate(std::vector<Individual> &Population) {
         ofs << t << ",";
         migrate(Population);
         chooseResource(Population);
-        std::vector<std::vector<double> > Fitness = getFitness(Population);
+        std::vector<double> Fitness = getFitness(Population);
         reproduce(Population, Fitness);
         mutate(Population);
         if ((t+1) % save == 0) {
