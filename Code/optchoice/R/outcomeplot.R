@@ -80,12 +80,17 @@ outcomeplot <- function(filename, nsim, title = NA) {
 
     for (i in 1:length(d2[,1])) {
       d2[i,3] <- d2[i,3] / d2[i,4]
+      if (d2[i,4] == 0) {
+        d2[i,3] <- 0
+      }
     }
 
     plot <- ggplot(d2, aes(beta, s)) + geom_tile(aes(fill = Differentiation)) +
       scale_fill_gradient2(low="#440154FF", mid="#238A8DFF", high="#FDE725FF", midpoint=0.5, breaks=seq(0,1,0.25),
                            limits=c(0, 1)) + theme(legend.position = "top")
   }
+
+  plot <- plot + xlab(expression(beta))
 
   if (!is.na(title)) {
     plot <- plot + ggtitle(title)

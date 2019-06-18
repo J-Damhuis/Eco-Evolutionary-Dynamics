@@ -29,31 +29,9 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1, h
   print(plot3)
   dev.off()
 
-  d2 <- read.csv(heatmap, header = TRUE) #Create data frame for heatmap of csv file
-  d3 <- as.data.frame(matrix(0, 2 / stepsize, (length(d2[, 1]) - 1) / everyntimesteps + 1)) #Create data frame of 0s with 2/stepsize rows and as many columns as the number of time steps
+  d2 <- read_csv(heatmap)
 
-  for (i in 1:length(d2[, 1])) { #Each timestep
-    if ((i - 1) %% everyntimesteps == 0) { #Only use every everyntimesteps time step
-      k <- length(d3[, 1]) #Set k to highest step
-      for (j in 2:length(d2[1, ])) { #Each individual
-        while (d2[i, j] < (k - 1) * stepsize - 1) { #As long as the X value is smaller than lower bound of current step
-          k <- k - 1 #Set k to the next step below the current step
-        }
-        d3[k, (i - 1) / everyntimesteps + 1] <- d3[k, (i - 1) / everyntimesteps + 1] + 1 #Add one to respective step
-      }
-      print(d2[i,1])
-    }
-  }
-
-  times <- rep(seq(0, (length(d3) - 1) * (d2[1 + everyntimesteps, 1] - d2[1, 1]), d2[1 + everyntimesteps, 1] - d2[1, 1]), each = 2/stepsize) #Create a list of the time points
-
-  X <- seq(-1 + stepsize / 2, 1 - stepsize / 2, stepsize) #Create a list of the middle between steps
-  d3 <- cbind(X, d3) #Add step list to front of data frame
-
-  d3 <- melt(d3, id.vars = "X") #Reshape data frame to make it able to be used by ggplot
-
-  d3$time <- times #Add new column to data frame with values of time points
-  colnames(d3)[colnames(d3)=="value"] <- "count" #Rename value column to count
+  d3 <- todensity(d2, everyntimesteps = everyntimesteps, binsize = stepsize)
 
   plot4 <- ggplot(d3, aes(time, X)) + geom_raster(aes(fill = count), interpolate = TRUE) + scale_fill_viridis_c() + theme(legend.position = "top") #Create heatmap plot
 
