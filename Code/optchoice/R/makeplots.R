@@ -41,10 +41,7 @@ makeplots <- function(filename, heatmap, stepsize = 0.05, everyntimesteps = 1, h
 
   threshold <- length(d2[1,]) * 0.2 + 150
 
-  list <- checkspeciation(heatmap = heatmap, method = "completion", calledbyfunction = TRUE)
-  d4 <- list$avgspec
-
-  colnames(d4) <- c("Time", "Speciation") #Change column names of speciation data frame
+  d4 <- checkspeciation(heatmap = heatmap, method = "completion", calledbyfunction = TRUE)
 
   plot5 <- ggplot(d4, aes(x = Time)) + geom_line(aes(y = Speciation, colour = "Value", linetype = "Value")) +
     geom_line(aes(y = threshold, colour = "Threshold", linetype = "Threshold")) +
