@@ -3,11 +3,7 @@ checkspeciation <- function(heatmap, method, output = NA, calledbyfunction = FAL
   d <- as.data.frame(d)
   threshold <- length(d[1,]) * 0.2 + 150
 
-  meanx <- 0
-  for (i in 2:length(d[length(d[,1]),])) {
-    meanx <- meanx + d[length(d[,1]),i]
-  }
-  meanx <- meanx / (length(d[length(d[,1]),]) - 1)
+  meanx <- d[length(d[,1]),-1] %>% t() %>% mean()
 
   if (method == "completion" & !calledbyfunction) {
     d <- d[length(d[,1]),]
@@ -18,9 +14,18 @@ checkspeciation <- function(heatmap, method, output = NA, calledbyfunction = FAL
     return(fit2$loglik - fit$loglik)
   })
   if (method == "initiation") {
-    #Insert some function to deal with vec
+
+    vec <- sapply(d2, function(x) {
+      if (x > threshold) {
+        return(1)
+      }
+      else {
+        return(0)
+      }
+    }) %>% sum()
+
     if (is.na(output)) {
-      if (length(vec) > 0) {
+      if (vec > 10) {
         cat("2 Species")
       }
       else if (meanx < -0.5) {
@@ -55,7 +60,7 @@ checkspeciation <- function(heatmap, method, output = NA, calledbyfunction = FAL
       }
     }
     else {
-      if (rename(count = value) > threshold) {
+      if (d2[length(d2)] > threshold) {
         cat("2 Species", file = output)
       }
       else if (meanx < -0.5) {

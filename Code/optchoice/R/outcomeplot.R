@@ -26,10 +26,12 @@ outcomeplot <- function(filename, nsim, title = NA) {
     colgen <- col2rgb("blue")/255
     coltwo <- col2rgb("green")/255
 
-    for (i in 1:length(d2[,1])) {
-      newcolour <- colspec*d2[i,3] + colgen*d2[i,4] + coltwo*d2[i,5]
-      d2[i,6] <- rgb(red = newcolour[1], green = newcolour[2], blue = newcolour[3], maxColorValue = nsim)
-    }
+    d3 <- apply(d2, 1, function(x) {
+      newcolour <- colspec*x[3] + colgen*x[4] + coltwo*x[5]
+      return(rgb(red = newcolour[1], green = newcolour[2], blue = newcolour[3], maxColorValue = nsim))
+    })
+
+    d2[,6] <- d3
 
     vec <- vector()
     for (i in 1:length(d2[,6])) {
