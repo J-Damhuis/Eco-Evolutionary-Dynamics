@@ -56,3 +56,21 @@ Raphael uses the ratio of within group variance and all variance
 Using a population size of 4000 does not change the behaviour of the models - just increases the upper bound
 Added in the option for parapatry
 For some reason in some simulations the cluster method only creates one group rather than two, which results in a spatial isolation value of NA
+Decided to just ignore simulations that give a spatial isolation value of NA
+For high values of q, the upper bound starts increasing as beta gets larger. This is what Raphael found too
+After some more simulations, the point where the upper bound is completely horizontal lies at around 0.85
+Started writing down the methods and results in LaTeX
+Vectorised a bunch of for-loops with help from Raphael
+
+Summary of most important messages:
+	- In sympatry:
+		- β facilitates speciation in the absence of strong disruptive selection (1)
+		- Higher δ also expands speciation possibilities (2)
+		- β also prevents the crossing of big fitness valleys -> inhibits speciation (1)
+		- Small effect of population size: makes it a bit easier to cross steep valleys (3)
+	- In parapatry:
+		- The ability to choose optimally makes it easier to cross deep fitness valleys (in contrast with sympatry)
+
+Made a list of what has to be done from now on:
+	- Think of meaning of δ
+	- Figure the format of thesis
