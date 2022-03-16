@@ -20,6 +20,7 @@ double q = 0.0; //Habitat asymmetry
 int seed = 1;
 const int save = 1; //Save feeding efficiencies to file every so many generations
 const std::vector<double> R = {10.0, 10.0}; //Total size of resources
+std::ofstream seedoutput("seed.txt"); //Output file with seed
 std::ofstream ofs("data.csv"); //Output file with habitat dynamics over time
 std::ofstream ofs2("heatmap.csv"); //Output file with individuals' trait values over time
 std::ofstream ofs3("habitat.csv"); //Output file with individuals' habitats over time
@@ -262,7 +263,7 @@ void simulate(std::vector<Individual> &Population) {
             ofs2 << "\n";
             ofs3 << "\n";
         }
-        std::cout << "Finished generation " << t+1 << "\n";
+        //std::cout << "Finished generation " << t+1 << "\n";
     }
 }
 
@@ -289,6 +290,7 @@ int main(int argc, char* argv[]) {
     if (!ofs2.is_open()) {
         return 1;
     }
+    seedoutput << seed;
     ofs << "Time,Fraction H0R0,MeanX H0R0,Found H0R0,Fraction H0R1,MeanX H0R1,Found H0R1,Fraction H1R0,MeanX H1R0,Found H1R0,Fraction H1R1,MeanX H1R1,Found H1R1\n";
     ofs2 << "Time";
     ofs3 << "Time";
