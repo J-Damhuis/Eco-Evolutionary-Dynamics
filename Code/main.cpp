@@ -5,13 +5,17 @@
 #include <algorithm>
 #include <iomanip>
 
+#include <array>
+
+#include <chrono>
+
 const int n = 1000; //Number of individuals
 const int g = 50000; //Number of generations
 const int h = 2; //Number of habitats
 const int r = 2; //Number of resources
 const int d = 10; //Number of feeding rounds per generation
 const double mu = 0.001; //Mutation rate
-const double sigma = 0.01; //Standard deviation of Gaussian distribution the size of a mutation is taken from
+const double sigma = 0.02; //Standard deviation of Gaussian distribution the size of a mutation is taken from
 const double m = 0.1; //Migration rate
 double beta = 0.5; //Degree of optimal choice
 double s = 1; //Selection coefficient
@@ -19,111 +23,172 @@ double delta = 0.2; //Slope of Michaelis-Menten function for resource acquisitio
 double q = 0.0; //Habitat asymmetry
 int seed = 1;
 const int save = 1; //Save feeding efficiencies to file every so many generations
-const std::vector<double> R = {10.0, 10.0}; //Total size of resources
+const std::array<double, 2> R = {10.0, 10.0}; //Total size of resources
 std::ofstream seedoutput("seed.txt"); //Output file with seed
 std::ofstream ofs("data.csv"); //Output file with habitat dynamics over time
 std::ofstream ofs2("heatmap.csv"); //Output file with individuals' trait values over time
 std::ofstream ofs3("habitat.csv"); //Output file with individuals' habitats over time
-std::mt19937_64 rng;
 
-class Individual {
+
+
+
+// random class
+struct rnd_j {
 public:
+    std::mt19937_64 rng; // needs to be public to use in std::shuffle
+
+    void set_seed(size_t seed) {
+        rng = std::mt19937_64(seed);
+    }
+
+
+    bool bernoulli(double p) {
+        std::bernoulli_distribution d(p);
+        return(d(rng));
+    }
+
+    double pickFeedEff() {
+        return chooseValue(rng);
+    }
+
+    double pickFraction() {
+        return chooseFraction(rng);
+    }
+
+    int pickResource() {
+        return chooseResource(rng);
+    }
+
+    double drawMutation() {
+        return add_mutation(rng);
+    }
+
+    double uniform() {
+        return chooseFraction(rng);
+    }
+
+
+private:
+    std::normal_distribution<double> add_mutation = std::normal_distribution<double>(0.0, sigma);
+    std::uniform_int_distribution<int> chooseResource = std::uniform_int_distribution<int>(0, 1);
+    std::uniform_real_distribution<double> chooseValue = std::uniform_real_distribution<double>(-1.0, -0.8);
+    std::uniform_real_distribution<double> chooseFraction = std::uniform_real_distribution<double>(0.0, 1.0);
+} rndgen;
+
+
+struct Individual {
+
+    Individual() {
+        Food = 0.0;
+        Habitat = 0;
+        FeedEff = rndgen.pickFeedEff();
+    }
+
+
     double FeedEff; //Ecological trait value
     double Food; //Found food (fitness)
     int Habitat; //Habitat individual is currently in
 };
 
-class Resource {
-public:
-    double Size; //Total size of the resource within a habitat
-    double Sum; //Sum of trait values of individuals feeding on this resource (only used to keep track of mean trait value within resource)
-    double Indiv; //Total number of individuals feeding on this resource (only used to keep track of mean number of individuals on each resource)
-    double FoundFood; //Total amount of this resource found during a feeding season
+struct Resource {
+
+    Resource() {
+        Size = 0.0;
+        Sum = 0.0;
+        Indiv = 0.0;
+        FoundFood = 0.0;
+    }
+
+    Resource(int habitat, int resource) {
+        Size = habitat == resource ? R[resource] * (1.0 / h) * (1.0 + q) : R[resource] * (1.0 / h) * (1.0 - q);
+        Sum = 0.0;
+        Indiv = 0.0;
+        FoundFood = 0.0;
+    }
+
+    double Size = 0.0; //Total size of the resource within a habitat
+    double Sum = 0.0; //Sum of trait values of individuals feeding on this resource (only used to keep track of mean trait value within resource)
+    double Indiv = 0.0; //Total number of individuals feeding on this resource (only used to keep track of mean number of individuals on each resource)
+    double FoundFood = 0.0; //Total amount of this resource found during a feeding season
 };
 
-class Habitat {
-public:
-    std::vector<Resource> Resources; //Resources within a habitat
-    std::vector<double> SumFeedEff; //Sum of feeding efficiencies of individuals feeding on resources within a habitat (used for decision making)
-    std::vector<std::vector<int> > Ind; //Lists of individuals feeding on resources within a habitat
+struct Habitat {
+
+    Habitat() {
+        Resources = {Resource(), Resource()};
+        SumFeedEff = {0.0, 0.0};
+        Ind = {std::vector<int>(), std::vector<int>()};
+    }
+
+    Habitat(int habitat) {
+        for (int resource = 0; resource < r; ++resource) {
+            Resources[resource] = Resource(habitat, resource);
+        }
+        SumFeedEff = {0.0, 0.0};
+        Ind = {std::vector<int>(), std::vector<int>()};
+    }
+
+    std::array<Resource, r> Resources; //Resources within a habitat
+    std::array<double, r> SumFeedEff; //Sum of feeding efficiencies of individuals feeding on resources within a habitat (used for decision making)
+    std::array< std::vector<int>, r> Ind; //Lists of individuals feeding on resources within a habitat
 };
 
 std::vector<Individual> createPopulation() {
     std::vector<Individual> Population(n);
-    std::uniform_real_distribution<double> chooseValue(-1.0, -0.8);
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        Population[individual].FeedEff = chooseValue(rng); //Set trait value to random number between -1.0 and -0.8
-        Population[individual].Food = 0.0; //Set found food to 0
-        Population[individual].Habitat = 0; //Place individual in first habitat
-    }
     return Population;
 }
 
 std::vector<Habitat> createHabitats() {
-    std::vector<Habitat> Habitats(h);
-    for (int habitat = 0; habitat < static_cast<int>(Habitats.size()); ++habitat) {
-        std::vector<Resource> Resources(r); //Create resources for habitats
-        for (int resource = 0; resource < static_cast<int>(Resources.size()); ++resource) {
-            Resources[resource].Size = habitat == resource ? R[resource] * (1.0 / h) * (1.0 + q) : R[resource] * (1.0 / h) * (1.0 - q); //Distribute resources over habitats according to habitat asymmetry q
-            Resources[resource].Sum = 0.0; //Set sum of trait values of each resource to 0
-            Resources[resource].FoundFood = 0.0; //Set total found food of each resource to 0
-            Resources[resource].Indiv = 0; //Set number of individuals feeding on each resource to 0
-        }
-        Habitats[habitat].Resources = Resources; //Put resources in habitats
-        Habitats[habitat].SumFeedEff = {0.0, 0.0}; //Set feeding efficiencies to 0
-        Habitats[habitat].Ind = {{}, {}}; //Make lists of individuals feeding on the resources empty
+    std::vector<Habitat> Habitats;
+    for (int i = 0; i < h; ++i) {
+        Habitats.push_back(Habitat(i));
     }
     return Habitats;
 }
 
 void shuffle(std::vector<Individual> &Population) { //Randomise order of individuals
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        std::uniform_int_distribution<int> chooseShuffle(individual, Population.size() - 1);
-        int swap = chooseShuffle(rng);
-        Individual tmp = Population[individual];
-        Population[individual] = Population[swap];
-        Population[swap] = tmp;
-            }
+    std::shuffle(Population.begin(), Population.end(), rndgen.rng);
 }
 
-constexpr double calcEnergy(const double local_s, const double x, const int i) {
-    return exp(-local_s * pow(x + pow(-1, i), 2)); //Get feeding efficiency based on trait value
+double calcEnergy(const double local_s, const double x, const int i) {
+    auto dd = x * x + 1;
+    i == 0 ? dd += 2 * x : dd -= 2 * x;
+    return exp(-local_s * dd);
 }
 
-void getFood(std::vector<Individual> &Population, Habitat &Habitat) {
-    for (int resource = 0; resource < static_cast<int>(Habitat.Ind.size()); ++resource) {
-        double Sum = 0.0; //Create variable to keep track of total sum of feeding efficiencies
-        for (int individual = 0; individual < static_cast<int>(Habitat.Ind[resource].size()); ++individual) {
-            Sum += calcEnergy(s, Population[Habitat.Ind[resource][individual]].FeedEff, resource); //Add each relevant individual's feeding efficiency to variable
-        }
-        for (int individual = 0; individual < static_cast<int>(Habitat.Ind[resource].size()); ++individual) {
-            Population[Habitat.Ind[resource][individual]].Food += calcEnergy(s, Population[Habitat.Ind[resource][individual]].FeedEff, resource) * Habitat.Resources[resource].Size / (Sum + pow(delta, -1) - 1); //Calculate found food for each individual
-        }
-    }
-}
-
-int makeChoice(std::vector<Individual> &Population, int i, std::vector<Habitat> &Habitats) {
+int makeChoice(const Individual& focal_ind, const std::vector<Habitat> &Habitats) {
     int l; //Variable which will output the decision that's made
     if (beta == 0) { //If individual chooses randomly (needed to avoid dividing by 0)
-        std::uniform_int_distribution<int> chooseResource(0, 1);
-        l = chooseResource(rng); //Set variable to either 0 or 1
+        l = rndgen.pickResource(); //Set variable to either 0 or 1
     }
     else { //If individual has some degree of optimal choice
-        std::vector<double> Fitness = Habitats[Population[i].Habitat].SumFeedEff; //Create vector of expected fitnesses at resources
-        std::vector<double> Energy = Fitness; //Create vector of noisy assessments of fitnesses which choice will be based on
-        for (int resource = 0; resource < static_cast<int>(Fitness.size()); ++resource) {
-            Fitness[resource] = Habitats[Population[i].Habitat].Resources[resource].Size * calcEnergy(s, Population[i].FeedEff, resource) / (calcEnergy(s, Population[i].FeedEff, resource) + Fitness[resource] + pow(delta, -1) - 1); //Calculate how much food individual would get if it fed on the resources
+        std::array<double, r> Fitness = Habitats[focal_ind.Habitat].SumFeedEff;
+        for (size_t resource = 0; resource < r; ++resource) {
+            auto energy_calced = calcEnergy(s, focal_ind.FeedEff, resource);
+
+            Fitness[resource] =
+                    Habitats[focal_ind.Habitat].Resources[resource].Size *
+                    energy_calced /
+                    (energy_calced +
+                     Fitness[resource] +
+                     1.0 / delta - 1); //Calculate how much food individual would get if it fed on the resources
         }
+
         double a = std::abs(Fitness[0] - Fitness[1]); //Calculate absolute difference between expected fitnesses
-        double b = (a + pow((1 - beta) * pow(a, 2), 0.5) / beta); //Calculate width of uniform distributions based on a and beta
-        for (int resource = 0; resource < static_cast<int>(Energy.size()); ++resource) {
-            std::uniform_real_distribution<double> getAssessment(Fitness[resource] - b / 2, Fitness[resource] + b / 2);
-            Energy[resource] = getAssessment(rng); //Get noisy assessment
+        double b = a + sqrt( (1 - beta) * a * a) / beta;
+
+        auto min_noise = - b / 2;
+        auto max_noise = b / 2;
+        auto range_noise = max_noise - min_noise;
+
+
+        for (int resource = 0; resource < r; ++resource) {
+            Fitness[resource] += min_noise + rndgen.uniform() * range_noise;   //getAssessment(rndgen.rng); //Get noisy assessment
         }
-        if (Energy[0] > Energy[1]) { //If first resource is perceived to be more advantageous
+        if (Fitness[0] > Fitness[1]) { //If first resource is perceived to be more advantageous
             l = 0; //Choose first resource
-        } else if (Energy[0] == Energy[1]) { //If resources are perceived to be equally good
-            l = Population[i].FeedEff < 0.0 ? 0 : 1; //Choose resource the individual is better adapted to
+        } else if (Fitness[0] == Fitness[1]) { //If resources are perceived to be equally good
+            l = focal_ind.FeedEff < 0.0 ? 0 : 1; //Choose resource the individual is better adapted to
         } else { //If second resource is perceived to be more advantageous
             l = 1; //Choose second resource
         }
@@ -131,31 +196,47 @@ int makeChoice(std::vector<Individual> &Population, int i, std::vector<Habitat> 
     return l; //Output the made decision
 }
 
-void updateValues(std::vector<Individual> &Population, Habitat &Habitat) {
-    for (int resource = 0; resource < static_cast<int>(Habitat.Resources.size()); ++resource) {
-        double TempSum = 0.0; //Create variable to keep track of sum of trait values
-        for (int individual = 0; individual < static_cast<int>(Habitat.Ind[resource].size()); ++individual) {
-            Habitat.Resources[resource].Sum += Population[Habitat.Ind[resource][individual]].FeedEff; //Update sum of trait values at resources
-            TempSum += calcEnergy(s, Population[Habitat.Ind[resource][individual]].FeedEff, resource); //Add individuals' trait values to variable
+void update_and_get_food(std::vector<Individual>& Population, Habitat& Habitat_) {
+    for (int resource = 0; resource < r; ++resource) {
+        int vec_size = 1;
+        if (!Habitat_.Ind[resource].empty()) vec_size += Habitat_.Ind[resource].back();
+
+        std::vector<double> energies(vec_size, 0.0);
+
+        for (const auto& i : Habitat_.Ind[resource]) {
+            Habitat_.Resources[resource].Sum += Population[ i ].FeedEff;
+            energies[i] = calcEnergy(s, Population[ i ].FeedEff, resource);
         }
-        Habitat.Resources[resource].FoundFood += TempSum / (TempSum + pow(delta, -1) - 1); //Calculate total amount of resource found during feeding round
-        Habitat.Resources[resource].Indiv += Habitat.Ind[resource].size(); //Update total number of individuals feeding on resource
+
+        auto TempSum = std::accumulate(energies.begin(), energies.end(), 0.0);
+
+        Habitat_.Resources[resource].FoundFood += TempSum / (TempSum + 1.0 / delta - 1); //Calculate total amount of resource found during feeding round
+        Habitat_.Resources[resource].Indiv += Habitat_.Ind[resource].size(); //Update total number of individuals feeding on resource
+
+        for (const auto& index : Habitat_.Ind[resource]) {
+            Population[index].Food +=
+                    //calcEnergy(s, Population[index].FeedEff, resource) *
+                    energies[index] *
+                    Habitat_.Resources[resource].Size / (TempSum + 1.0 / delta - 1); //Calculate found food for each individual
+        }
     }
 }
+
+
+
 
 void chooseResource(std::vector<Individual> &Population) {
     std::vector<Habitat> Habitats = createHabitats(); //Reset habitats
     for (int round = 0; round < d; ++round) {
         shuffle(Population); //Randomise the order of the individuals
         for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-            int j = makeChoice(Population, individual, Habitats); //Let individual make choice
+            int j = makeChoice(Population[individual], Habitats); //Let individual make choice
             Habitats[Population[individual].Habitat].Ind[j].push_back(individual); //Add individual to list of individuals feeding on the chosen resource
             Habitats[Population[individual].Habitat].SumFeedEff[j] += calcEnergy(s, Population[individual].FeedEff, j); //Add individual's feeding efficiency to total feeding efficiencies at resource
         }
         for (int habitat = 0; habitat < static_cast<int>(Habitats.size()); ++habitat) {
-            updateValues(Population, Habitats[habitat]); //Update values of variables
-            getFood(Population, Habitats[habitat]); //Distribute found resources over individuals
-            for (int resource = 0; resource < static_cast<int>(Habitats[habitat].Ind.size()); ++resource) {
+            update_and_get_food(Population, Habitats[habitat]);
+            for (int resource = 0; resource < r; ++resource) {
                 Habitats[habitat].Ind[resource].clear(); //Empty list of individuals feeding on the resources
                 Habitats[habitat].SumFeedEff[resource] = 0.0; //Reset totals of feeding efficiencies at the resources
             }
@@ -179,9 +260,9 @@ void chooseResource(std::vector<Individual> &Population) {
 }
 
 std::vector<double> getFitness(std::vector<Individual> &Population) {
-    std::vector<double> Fitness; //Create list of fitnesses
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        Fitness.push_back(Population[individual].Food); //Add each individual's found food to fitness list
+    std::vector<double> Fitness(Population.size()); //Create list of fitnesses
+    for (size_t individual = 0; individual < Population.size(); ++individual) {
+        Fitness[individual] = Population[individual].Food; //Add each individual's found food to fitness list
     }
     return Fitness;
 }
@@ -190,46 +271,42 @@ void reproduce(std::vector<Individual> &Population, std::vector<double> &Fitness
     std::vector<Individual> NewPopulation; //Create new population
     std::discrete_distribution<int> chooseParent(Fitness.begin(), Fitness.end());
     for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        int p = chooseParent(rng); //Choose which individual reproduces based on fitness values
+        int p = chooseParent(rndgen.rng); //Choose which individual reproduces based on fitness values
         NewPopulation.push_back(Population[p]); //Place copy of reproducing individual in new population
         NewPopulation.back().Food = 0.0; //Set found food of new individual to 0
     }
-    Population = NewPopulation; //Replace old population with new population
+    std::swap(Population, NewPopulation); //Replace old population with new population
 }
 
 void mutate(std::vector<Individual> &Population) {
-    std::uniform_real_distribution<double> chooseFraction(0.0, 1.0);
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        double v = chooseFraction(rng); //Choose random number between 0 and 1; if it's smaller than mu, mutation will take place
-        if (v < mu) { //if mutation takes place
-            std::normal_distribution<double> chooseMutation(Population[individual].FeedEff, sigma);
-            Population[individual].FeedEff = chooseMutation(rng); //Set new trait value to a small deviation from the old trait value taken from a normal distribution
-            if (Population[individual].FeedEff < -1.0) {
-                Population[individual].FeedEff = -1.0; //Make sure trait value is at least -1
+
+    for (auto& i : Population) {
+        if (rndgen.bernoulli(mu)) { //if mutation takes place
+            i.FeedEff += rndgen.drawMutation(); //Set new trait value to a small deviation from the old trait value taken from a normal distribution
+            if (i.FeedEff < -1.0) {
+                i.FeedEff = -1.0; //Make sure trait value is at least -1
             }
-            else if (Population[individual].FeedEff > 1.0) {
-                Population[individual].FeedEff = 1.0; //Make sure trait value is at most 1
+            else if (i.FeedEff > 1.0) {
+                i.FeedEff = 1.0; //Make sure trait value is at most 1
             }
         }
     }
 }
 
-void migrate(std::vector<Individual> &Population) {
-    std::vector<std::vector<int> > Ind = {{}, {}}; //Create list for individuals per habitat
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        Ind[Population[individual].Habitat].push_back(individual); //Put individual in list of habitat that it resides in
-    }
-    for (int habitat = 0; habitat < static_cast<int>(Ind.size()); ++habitat) {
-        std::binomial_distribution<int> chooseMigrations(Ind[habitat].size(), m);
-        int migrants = chooseMigrations(rng); //Choose number of migrating individuals based on migration rate and number of individuals in a habitat
-        for (int migrant = 0; migrant < migrants; ++migrant) {
-            std::uniform_int_distribution<int> chooseIndividual(0, Ind[habitat].size() - 1);
-            int j = chooseIndividual(rng); //Choose which individual migrates
-            Population[Ind[habitat][j]].Habitat = Population[Ind[habitat][j]].Habitat == 0 ? 1 : 0; //Change habitat the migrating individual resides in
-            Ind[habitat].erase(Ind[habitat].begin() + j); //Remove individual from list of individuals in it previous habitat
-        }
+void migrate(std::vector<Individual>& Population) {
+
+    std::vector<int> all_migrants;
+    std::binomial_distribution<int> chooseMigrations(Population.size(), m);
+    int num_migrants = chooseMigrations(rndgen.rng);
+
+    for (int i = 0; i < num_migrants; ++i) {
+        std::uniform_int_distribution<int> rand_index(i, Population.size() - 1);
+        int index = rand_index(rndgen.rng);
+        std::swap(Population[i], Population[index]);
+        Population[i].Habitat = 1 - Population[i].Habitat;
     }
 }
+
 
 bool sortPop(Individual i, Individual j) {
     return (i.FeedEff > j.FeedEff); //Helps sort the individuals by trait value to make the analysis easier
@@ -239,13 +316,16 @@ void simulate(std::vector<Individual> &Population) {
     ofs2 << "0";
     ofs3 << "0";
     sort(Population.begin(), Population.end(), sortPop);
-    for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-        ofs2 << "," << Population[individual].FeedEff;
-        ofs3 << "," << Population[individual].Habitat;
+    for (const auto& i : Population) {
+        ofs2 << "," << i.FeedEff;
+        ofs3 << "," << i.Habitat;
     }
     ofs2 << "\n";
     ofs3 << "\n";
+    auto clock_start = std::chrono::system_clock::now();
     for (int t = 0; t < g; ++t) {
+
+
         ofs << t << ",";
         migrate(Population);
         chooseResource(Population);
@@ -256,14 +336,21 @@ void simulate(std::vector<Individual> &Population) {
             ofs2 << t + 1;
             ofs3 << t + 1;
             sort(Population.begin(), Population.end(), sortPop);
-            for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
-                ofs2 << "," << Population[individual].FeedEff;
-                ofs3 << "," << Population[individual].Habitat;
+            //for (int individual = 0; individual < static_cast<int>(Population.size()); ++individual) {
+            for (const auto& i : Population) {
+                ofs2 << "," << i.FeedEff;
+                ofs3 << "," << i.Habitat;
             }
             ofs2 << "\n";
             ofs3 << "\n";
+
+            auto clock_now = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed_seconds = clock_now - clock_start;
+            auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_seconds).count();
+
+            std::cout << "Finished generation " << t+1 << " " << millis << "ms\n";
+            clock_start = std::chrono::system_clock::now();
         }
-        //std::cout << "Finished generation " << t+1 << "\n";
     }
 }
 
@@ -280,7 +367,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
     }
-    rng.seed(seed);
+    rndgen.set_seed(seed);
     std::cout << "β = " << beta << " | s = " << s << " | δ = " << delta << " | q = " << q << "\n";
     std::cout << "Using seed " << seed << "\n";
     std::vector<Individual> Population = createPopulation();
